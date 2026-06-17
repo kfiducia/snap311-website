@@ -1,9 +1,11 @@
 // Central place for all outbound links so they're easy to update.
 
-// App Store URL — currently 404s while Apple reviews the v1.0 submission
-// (submitted June 17, 2026). It goes live as soon as the app is approved.
+// App Store URL — 404s while Apple reviews the v1.0 submission (submitted
+// June 17, 2026). Flip APP_STORE_LIVE to true once it's approved; until then
+// the hero shows an "App Store — coming soon" state instead of a dead link.
 export const APP_STORE_URL =
   "https://apps.apple.com/us/app/snap311/id6781074409";
+export const APP_STORE_LIVE = false;
 
 // TestFlight public beta link (App Store Connect → TestFlight → External
 // Testing → "Public Link"). Set to null to show a "coming soon" state.
