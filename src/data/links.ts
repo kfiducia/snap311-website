@@ -12,10 +12,14 @@ export const APP_STORE_LIVE = false;
 export const TESTFLIGHT_URL: string | null =
   "https://testflight.apple.com/join/d3RN7ceA";
 
-// Android beta — Google Play internal testing opt-in link. Set to null to
-// hide the Android button.
+// Android beta. IMPORTANT: the link below is a Play *internal testing* link —
+// it's invite-only (testers added by email, max 100) and NOT publicly
+// joinable, so the public can't use it. Replace it with the PUBLIC *open
+// testing* opt-in URL and flip ANDROID_LIVE to true; until then the hero
+// shows an "Android beta — coming soon" state.
 export const ANDROID_URL: string | null =
   "https://play.google.com/apps/internaltest/4701447524912025594";
+export const ANDROID_LIVE = false;
 
 export const BMC_URL = "https://buymeacoffee.com/snap311";
 

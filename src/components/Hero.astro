@@ -4,6 +4,7 @@ import {
   APP_STORE_LIVE,
   TESTFLIGHT_URL,
   ANDROID_URL,
+  ANDROID_LIVE,
   BMC_URL,
 } from "../data/links";
 ---
@@ -110,7 +111,7 @@ import {
 
       <!-- Android beta -->
       {
-        ANDROID_URL && (
+        ANDROID_LIVE && ANDROID_URL ? (
           <a
             href={ANDROID_URL}
             target="_blank"
@@ -119,6 +120,13 @@ import {
           >
             Join the Android beta
           </a>
+        ) : (
+          <span
+            class="inline-flex h-[54px] w-full cursor-default items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 font-semibold text-white/70 sm:w-auto"
+            title="A public Android beta is coming soon."
+          >
+            Android beta — coming soon
+          </span>
         )
       }
 
