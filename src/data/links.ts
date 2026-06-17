@@ -14,11 +14,11 @@ export const TESTFLIGHT_URL: string | null =
 
 export const BMC_URL = "https://buymeacoffee.com/snap311";
 
-// The app repo is PRIVATE until a security review is done. When it goes
-// public, re-add the "Open source: …" line in Features.astro and the
-// "GitHub" link in SiteFooter.astro (both used GITHUB_REPO).
+// The app repo is PRIVATE until a security review is done, so these aren't
+// linked from the site right now. Bug reports go through App Store reviews
+// instead (see Faq.astro). When the repo goes public, optionally re-add the
+// "Open source: …" line in Features.astro and a "GitHub" footer link.
 export const GITHUB_REPO = "https://github.com/kfiducia/snap311";
-// Issues links stay live now — they resolve once the repo is public.
 export const GITHUB_ISSUES = "https://github.com/kfiducia/snap311/issues";
 
 export const PRIVACY_URL = "https://kfiducia.github.io/snap311-policy/";

@@ -1,5 +1,5 @@
 ---
-import { PRIVACY_URL, GITHUB_ISSUES } from "../data/links";
+import { PRIVACY_URL, APP_STORE_URL, APP_STORE_LIVE } from "../data/links";
 
 const faqs = [
   {
@@ -21,13 +21,18 @@ const faqs = [
   },
   {
     q: "What if I find a bug?",
-    a: "Open an issue on GitHub and I'll take a look.",
-    link: { href: GITHUB_ISSUES, label: "Open an issue on GitHub" },
+    a: "Easiest thing: leave a review on the App Store and describe what went wrong. I scan reviews for bug reports and fix what people mention — no account, no bug tracker, nothing technical to learn.",
+    link: APP_STORE_LIVE
+      ? {
+          href: `${APP_STORE_URL}?action=write-review`,
+          label: "Write an App Store review",
+        }
+      : undefined,
   },
 ];
 ---
 
-<section class="bg-white py-16 sm:py-20" aria-labelledby="faq-heading">
+<section id="faq" class="bg-white py-16 sm:py-20" aria-labelledby="faq-heading">
   <div class="mx-auto max-w-2xl px-6">
     <h2
       id="faq-heading"
