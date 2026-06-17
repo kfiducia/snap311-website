@@ -3,6 +3,7 @@ import {
   APP_STORE_URL,
   APP_STORE_LIVE,
   TESTFLIGHT_URL,
+  ANDROID_URL,
   BMC_URL,
 } from "../data/links";
 ---
@@ -58,7 +59,7 @@ import {
     </p>
 
     <div
-      class="mt-10 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row sm:gap-4"
+      class="mt-10 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:gap-4"
     >
       <!-- App Store -->
       {
@@ -104,6 +105,20 @@ import {
           >
             TestFlight beta — coming soon
           </span>
+        )
+      }
+
+      <!-- Android beta -->
+      {
+        ANDROID_URL && (
+          <a
+            href={ANDROID_URL}
+            target="_blank"
+            rel="noopener"
+            class="inline-flex h-[54px] w-full items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 font-semibold text-white backdrop-blur transition hover:bg-white/20 sm:w-auto"
+          >
+            Join the Android beta
+          </a>
         )
       }
 

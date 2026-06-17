@@ -12,6 +12,11 @@ export const APP_STORE_LIVE = false;
 export const TESTFLIGHT_URL: string | null =
   "https://testflight.apple.com/join/d3RN7ceA";
 
+// Android beta — Google Play internal testing opt-in link. Set to null to
+// hide the Android button.
+export const ANDROID_URL: string | null =
+  "https://play.google.com/apps/internaltest/4701447524912025594";
+
 export const BMC_URL = "https://buymeacoffee.com/snap311";
 
 // The app repo is PRIVATE until a security review is done, so these aren't
