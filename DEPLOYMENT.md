@@ -5,8 +5,18 @@ Everything you need to build, deploy, point the domain, and manage DNS — witho
 - **Repo:** https://github.com/kfiducia/snap311-website
 - **Host:** Cloudflare Pages — project `snap311-website`
 - **Live (Cloudflare subdomain):** https://snap311-website.pages.dev
-- **Target custom domain:** https://snap311.app
-- **Registrar:** Namecheap · **DNS (planned):** Cloudflare
+- **Custom domain:** https://snap311.app — **live** (apex attached + validated, auto SSL)
+- **Registrar:** Namecheap · **DNS:** Cloudflare (nameservers delegated)
+
+### Current state (as of launch)
+
+- ✅ Site is live at https://snap311.app and https://snap311-website.pages.dev
+- ✅ Apex `snap311.app` resolves via a proxied `CNAME → snap311-website.pages.dev`
+- ⬜ `www.snap311.app` — **not set up** (optional; see §3 "www")
+- ⬜ Git auto-deploy — set up in the dashboard (see §2 Option A); until then,
+  deploys are manual via Wrangler (§2 Option B)
+- ⬜ "Open source" claim + repo links — **removed** until the app repo is
+  public (see §7)
 
 ---
 
@@ -34,19 +44,30 @@ auto-deploys on every push and needs no local token.
 1. Cloudflare dashboard → **Workers & Pages** → **Create** → **Pages** →
    **Connect to Git**.
 2. Authorize GitHub, pick **`kfiducia/snap311-website`**.
-3. Build settings:
-   - **Framework preset:** Astro
-   - **Build command:** `npm run build`
-   - **Build output directory:** `dist`
-   - **Production branch:** `main`
+3. **Build configuration** (exact values):
+
+   | Field | Value |
+   |-------|-------|
+   | Production branch | `main` |
+   | Framework preset | **Astro** |
+   | Build command | `npm run build` |
+   | Build output directory | `dist` (the field already shows a leading `/`, so just type `dist`) |
+   | Root directory (advanced) | *leave blank* |
+
+   Choosing the **Astro** preset usually auto-fills the build command and
+   output directory — just confirm they match the table.
 4. **Save and Deploy.** From now on, `git push` to `main` redeploys
    automatically. Pull requests get preview URLs.
 
-> Note: the project was first created via Wrangler (Option B). If you connect
-> Git to the *same* project name, it takes over deploys cleanly. If
-> Cloudflare insists on a new project, either delete the Wrangler-made
-> `snap311-website` project first, or name the Git project something else and
-> move the custom domain to it.
+> ⚠️ The project was first created via Wrangler (Option B), and the
+> `snap311.app` custom domain is attached to **that** project. If Git
+> integration attaches to the **same** `snap311-website` project, the domain
+> stays put — done. If Cloudflare forces a **new** project, either:
+> - delete the old Wrangler-made `snap311-website` project first and name the
+>   Git project `snap311-website`, **or**
+> - let the Git project use a new name, then **move the custom domain**:
+>   remove `snap311.app` from the old project (Custom domains → Remove) and
+>   add it to the new one (Custom domains → Set up a custom domain).
 
 ### Option B — Manual deploy with Wrangler (from your machine)
 
@@ -87,16 +108,33 @@ domain to Pages.
 4. Wait for Cloudflare to mark the zone **Active** (minutes, up to a few hours).
    You'll get an email.
 
-### Step 3 — Attach the domain to Pages
+### Step 3 — Attach the domain to Pages  ✅ done
 
 1. Cloudflare → **Workers & Pages** → `snap311-website` → **Custom domains**.
 2. **Set up a custom domain** → enter `snap311.app` → **Activate**.
-3. Because DNS is now on Cloudflare, the required record is created
-   automatically. SSL is issued automatically (the `.app` TLD *requires*
-   HTTPS — Cloudflare handles the certificate).
-4. Optional: repeat for `www.snap311.app` and set up a redirect to the apex.
+3. Cloudflare validates the domain and issues SSL automatically (the `.app`
+   TLD *requires* HTTPS — Cloudflare handles the certificate).
+4. **The apex record:** Pages needs a `CNAME snap311.app → snap311-website.pages.dev`
+   (Proxied). It usually auto-creates this when there's no conflicting record.
+   If validation is stuck on *"CNAME record not set,"* add it by hand in
+   **DNS → Records → Add record**:
+   - Type `CNAME` · Name `@` · Target `snap311-website.pages.dev` · **Proxied** (orange cloud)
 
-Done. https://snap311.app serves the site within a few minutes.
+   > If you see HTTP **522**, a stale/parking record is still at the apex —
+   > delete it (see §4) so the Pages CNAME can take over. HTTP **530/1016**
+   > means *no* apex record exists yet — add the CNAME above.
+
+Done. https://snap311.app serves the site within ~1–2 minutes.
+
+### www (optional) — not currently set up
+
+To also serve `www.snap311.app`, add one DNS record:
+
+- **DNS → Records → Add record** · Type `CNAME` · Name `www` · Target
+  `snap311-website.pages.dev` · **Proxied**.
+- Then add `www.snap311.app` under the Pages project's **Custom domains** too.
+- (Optional) To redirect `www` → apex, add a **Redirect Rule** (Rules →
+  Redirect Rules) from `www.snap311.app/*` to `https://snap311.app/$1`.
 
 ---
 
@@ -182,7 +220,51 @@ Account ID is also visible in the dashboard URL: `dash.cloudflare.com/<account-i
 | "Why" narrative | `src/components/Why.astro` |
 | Steps / features / FAQ copy | `src/components/Steps.astro`, `Features.astro`, `Faq.astro` |
 | Colors / fonts | `src/styles/global.css` (`@theme` block) |
+| OpenGraph share image | `public/img/og.png` (1200×630; meta tags in `Layout.astro`) |
+| Favicon | `public/favicon.ico` + `public/img/favicon.png` |
 | Screenshots | replace files in `public/img/screenshots/` (keep the size suffixes) |
 
 After editing: `npm run build`, then either `git push` (Option A auto-deploy)
 or `npx wrangler pages deploy dist --project-name=snap311-website` (Option B).
+
+---
+
+## 7. When the app repo goes public
+
+The app source repo (`github.com/kfiducia/snap311`) is **private** pending a
+security review, so the site currently does **not** advertise "open source"
+or link to the repo. The GitHub **issues** links (Support, FAQ) are kept —
+they start working as soon as the repo is public.
+
+Once you've reviewed it and flipped the repo to public, re-add two things
+(both reference `GITHUB_REPO`, already defined in `src/data/links.ts`):
+
+1. **`src/components/Features.astro`** — add back the "Open source" line below
+   the feature list:
+   ```astro
+   <p class="mt-8 text-lg text-ink">
+     Open source:{" "}
+     <a href={GITHUB_REPO} target="_blank" rel="noopener"
+        class="font-semibold text-brand underline underline-offset-2 hover:text-navy">
+       github.com/kfiducia/snap311
+     </a>
+   </p>
+   ```
+   (and re-add `import { GITHUB_REPO } from "../data/links";` at the top)
+2. **`src/components/SiteFooter.astro`** — add a `GitHub` link back into the
+   footer nav, pointing at `GITHUB_REPO` (and re-add it to the import).
+
+Then `npm run build` and deploy.
+
+---
+
+## 8. Launch checklist / known follow-ups
+
+- [ ] Set up Git auto-deploy (§2 Option A) so pushes deploy themselves.
+- [ ] (Optional) Add `www.snap311.app` (§3 "www").
+- [ ] App Store button 404s until Apple approves the v1.0 review — it starts
+      working automatically once approved; no change needed.
+- [ ] After the security review, make the app repo public and re-add the
+      open-source links (§7).
+- [x] Custom domain `snap311.app` live with auto SSL.
+- [x] OpenGraph card, favicon, privacy + TestFlight + Buy-Me-a-Coffee links.
