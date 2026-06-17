@@ -1,0 +1,78 @@
+---
+import { PRIVACY_URL, GITHUB_ISSUES } from "../data/links";
+
+const faqs = [
+  {
+    q: "Is this an official DC government app?",
+    a: "No. Snap311 is an independent, unofficial app made by someone who loves DC. It is not affiliated with or endorsed by the District of Columbia government.",
+  },
+  {
+    q: "How do you handle my data?",
+    a: "There are no accounts and no tracking SDKs. Read the full privacy policy for the details.",
+    link: { href: PRIVACY_URL, label: "Read the privacy policy" },
+  },
+  {
+    q: "Will Android be supported?",
+    a: "Maybe. It's iOS-only for now. If you want an Android version, let me know — open an issue on GitHub.",
+  },
+  {
+    q: "Where do my reports go?",
+    a: "To the same DC 311 system used by the official app, the website, and the phone line. Snap311 just gives you a faster way to file them.",
+  },
+  {
+    q: "What if I find a bug?",
+    a: "Open an issue on GitHub and I'll take a look.",
+    link: { href: GITHUB_ISSUES, label: "Open an issue on GitHub" },
+  },
+];
+---
+
+<section class="bg-white py-16 sm:py-20" aria-labelledby="faq-heading">
+  <div class="mx-auto max-w-2xl px-6">
+    <h2
+      id="faq-heading"
+      class="text-3xl font-bold tracking-tight text-navy-deep sm:text-4xl"
+    >
+      Frequently asked
+    </h2>
+
+    <div class="mt-8 divide-y divide-black/10 border-y border-black/10">
+      {
+        faqs.map((faq) => (
+          <details class="group py-2">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 py-3 text-lg font-semibold text-navy-deep [&::-webkit-details-marker]:hidden">
+              {faq.q}
+              <svg
+                class="faq-chevron h-5 w-5 flex-shrink-0 text-muted transition-transform duration-200"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </summary>
+            <div class="pb-4 text-base leading-relaxed text-muted">
+              <p>{faq.a}</p>
+              {faq.link && (
+                <p class="mt-2">
+                  <a
+                    href={faq.link.href}
+                    target="_blank"
+                    rel="noopener"
+                    class="font-semibold text-brand underline underline-offset-2 hover:text-navy"
+                  >
+                    {faq.link.label}
+                  </a>
+                </p>
+              )}
+            </div>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>

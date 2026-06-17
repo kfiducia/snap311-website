@@ -1,0 +1,37 @@
+---
+import { PRIVACY_URL, GITHUB_REPO, GITHUB_ISSUES } from "../data/links";
+---
+
+<footer class="bg-navy-deep py-12 text-white/80">
+  <div class="mx-auto max-w-3xl px-6 text-center">
+    <nav
+      class="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm font-medium"
+      aria-label="Footer"
+    >
+      <a
+        href={PRIVACY_URL}
+        target="_blank"
+        rel="noopener"
+        class="hover:text-white">Privacy Policy</a
+      >
+      <a
+        href={GITHUB_REPO}
+        target="_blank"
+        rel="noopener"
+        class="hover:text-white">GitHub</a
+      >
+      <a
+        href={GITHUB_ISSUES}
+        target="_blank"
+        rel="noopener"
+        class="hover:text-white">Support</a
+      >
+    </nav>
+
+    <p class="mt-6 text-sm leading-relaxed text-white/60">
+      An independent project. Not affiliated with the District of Columbia
+      government.
+    </p>
+    <p class="mt-1 text-sm text-white/55">© 2026 Snap311</p>
+  </div>
+</footer>

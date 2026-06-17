@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+/* Snap311 brand tokens (Tailwind v4 theme) */
+@theme {
+  --color-navy: #034670;
+  --color-navy-deep: #023351;
+  --color-brand: #0b3d91;
+  --color-cream: #f4ebe2;
+  --color-offwhite: #f8f5f0;
+  --color-ink: #333333;
+  --color-muted: #666666;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji";
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-offwhite);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* FAQ chevron rotation for native <details> */
+details[open] .faq-chevron {
+  transform: rotate(180deg);
+}

@@ -1,0 +1,49 @@
+---
+const steps = [
+  {
+    emoji: "📸",
+    title: "Snap a photo",
+    body: "Camera opens. Location is pulled from your photo's GPS automatically.",
+  },
+  {
+    emoji: "🏷️",
+    title: "Pick a category",
+    body: "Recent and most common categories are at the top. Search for the rest.",
+  },
+  {
+    emoji: "📩",
+    title: "Submit",
+    body: "Goes straight to DC's 311 system. Get a notification when they close your report.",
+  },
+];
+---
+
+<section class="bg-offwhite py-16 sm:py-20" aria-labelledby="how-heading">
+  <div class="mx-auto max-w-5xl px-6">
+    <h2
+      id="how-heading"
+      class="text-center text-3xl font-bold tracking-tight text-navy-deep sm:text-4xl"
+    >
+      How it works
+    </h2>
+
+    <ol class="mt-12 grid gap-8 sm:grid-cols-3">
+      {
+        steps.map((step, i) => (
+          <li class="relative rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5">
+            <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-navy px-3 py-1 text-xs font-bold text-white">
+              {i + 1}
+            </span>
+            <div class="text-5xl" aria-hidden="true">
+              {step.emoji}
+            </div>
+            <h3 class="mt-4 text-xl font-semibold text-navy-deep">
+              {step.title}
+            </h3>
+            <p class="mt-2 leading-relaxed text-muted">{step.body}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

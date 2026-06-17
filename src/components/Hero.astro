@@ -1,0 +1,109 @@
+---
+import { APP_STORE_URL, TESTFLIGHT_URL, BMC_URL } from "../data/links";
+---
+
+<header
+  class="relative overflow-hidden bg-navy text-white"
+>
+  <!-- DC skyline anchored to the bottom, low opacity -->
+  <picture>
+    <source srcset="/img/header-skyline.webp" type="image/webp" />
+    <img
+      src="/img/header-skyline.png"
+      alt=""
+      aria-hidden="true"
+      width="1600"
+      height="300"
+      loading="eager"
+      class="pointer-events-none absolute inset-x-0 bottom-0 z-0 w-full select-none object-cover object-bottom opacity-35"
+    />
+  </picture>
+
+  <div
+    class="relative z-10 mx-auto flex max-w-3xl flex-col items-center px-6 pt-16 pb-24 text-center sm:pt-24 sm:pb-32"
+  >
+    <picture>
+      <source
+        type="image/webp"
+        srcset="/img/icon-192.webp 192w, /img/icon-512.webp 512w"
+        sizes="96px"
+      />
+      <img
+        src="/img/icon-192.png"
+        srcset="/img/icon-192.png 192w, /img/icon-512.png 512w"
+        sizes="96px"
+        alt="Snap311 app icon"
+        width="96"
+        height="96"
+        loading="eager"
+        fetchpriority="high"
+        class="h-24 w-24 rounded-[22%] shadow-lg ring-1 ring-white/10"
+      />
+    </picture>
+
+    <h1 class="mt-6 text-5xl font-extrabold tracking-tight sm:text-6xl">
+      Snap311
+    </h1>
+
+    <p
+      class="mt-4 max-w-xl text-lg leading-relaxed text-white/90 sm:text-xl"
+    >
+      Report DC 311 issues in 5 seconds. Built because the official app keeps
+      breaking.
+    </p>
+
+    <div
+      class="mt-10 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row sm:gap-4"
+    >
+      <!-- App Store -->
+      <a
+        href={APP_STORE_URL}
+        class="inline-flex h-[54px] w-full items-center justify-center rounded-xl transition hover:opacity-90 sm:w-auto"
+        aria-label="Download Snap311 on the App Store"
+      >
+        <img
+          src="/img/badge-appstore.svg"
+          alt="Download on the App Store"
+          width="162"
+          height="54"
+          class="h-[54px] w-auto"
+        />
+      </a>
+
+      <!-- TestFlight -->
+      {
+        TESTFLIGHT_URL ? (
+          <a
+            href={TESTFLIGHT_URL}
+            target="_blank"
+            rel="noopener"
+            class="inline-flex h-[54px] w-full items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 font-semibold text-white backdrop-blur transition hover:bg-white/20 sm:w-auto"
+          >
+            Join the TestFlight beta
+          </a>
+        ) : (
+          <span
+            class="inline-flex h-[54px] w-full cursor-default items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 font-semibold text-white/70 sm:w-auto"
+            title="The public TestFlight link goes live once Beta App Review approves."
+          >
+            TestFlight beta — coming soon
+          </span>
+        )
+      }
+
+      <!-- Buy Me a Coffee -->
+      <a
+        href={BMC_URL}
+        target="_blank"
+        rel="noopener"
+        class="inline-flex h-[54px] w-full items-center justify-center gap-2 rounded-xl bg-cream px-6 font-semibold text-navy-deep transition hover:bg-white sm:w-auto"
+      >
+        <span aria-hidden="true">☕</span> Buy Me a Coffee
+      </a>
+    </div>
+
+    <p class="mt-6 text-sm text-white/60">
+      Free • No accounts • No ads • No tracking
+    </p>
+  </div>
+</header>

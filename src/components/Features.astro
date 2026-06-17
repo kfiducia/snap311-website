@@ -1,0 +1,57 @@
+---
+import { GITHUB_REPO } from "../data/links";
+
+const features = [
+  "Camera-first photo-to-submit in about 5 seconds",
+  "Offline drafts that auto-retry when you reconnect",
+  "Map pin picker for when photos lack GPS",
+  "Track past reports and get notified when DC closes them",
+  "Add a past report by SR number to recover lost reports after reinstall",
+  "No accounts, no ads, no tracking SDKs",
+];
+---
+
+<section class="bg-white py-16 sm:py-20" aria-labelledby="features-heading">
+  <div class="mx-auto max-w-3xl px-6">
+    <h2
+      id="features-heading"
+      class="text-3xl font-bold tracking-tight text-navy-deep sm:text-4xl"
+    >
+      Everything in the box
+    </h2>
+
+    <ul class="mt-8 grid gap-4 sm:grid-cols-2">
+      {
+        features.map((feature) => (
+          <li class="flex items-start gap-3 text-lg leading-relaxed text-ink">
+            <svg
+              class="mt-1 h-5 w-5 flex-shrink-0 text-navy"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.5 7.6a1 1 0 0 1-1.427 0l-3.5-3.55a1 1 0 1 1 1.422-1.406l2.787 2.826 6.788-6.878a1 1 0 0 1 1.414-.006z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <span>{feature}</span>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="mt-8 text-lg text-ink">
+      Open source:{" "}
+      <a
+        href={GITHUB_REPO}
+        target="_blank"
+        rel="noopener"
+        class="font-semibold text-brand underline underline-offset-2 hover:text-navy"
+      >
+        github.com/kfiducia/snap311
+      </a>
+    </p>
+  </div>
+</section>

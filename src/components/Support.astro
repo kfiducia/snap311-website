@@ -1,0 +1,32 @@
+---
+import { BMC_URL } from "../data/links";
+---
+
+<section
+  class="bg-cream py-16 sm:py-20"
+  aria-labelledby="support-heading"
+>
+  <div class="mx-auto max-w-2xl px-6 text-center">
+    <h2
+      id="support-heading"
+      class="text-3xl font-bold tracking-tight text-navy-deep sm:text-4xl"
+    >
+      Buy me a coffee
+    </h2>
+
+    <p class="mt-5 text-lg leading-relaxed text-ink">
+      Snap311 is free and I plan to keep it that way. If it's saved you a
+      frustrating round-trip with the official app, a coffee covers Apple
+      Developer fees and the next round of features.
+    </p>
+
+    <a
+      href={BMC_URL}
+      target="_blank"
+      rel="noopener"
+      class="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-8 py-4 text-lg font-semibold text-white shadow-md transition hover:bg-navy-deep"
+    >
+      <span aria-hidden="true">☕</span> Buy Me a Coffee
+    </a>
+  </div>
+</section>
