@@ -50,7 +50,9 @@ Edit `src/data/links.ts`. Notable:
 
 ## Deploy (Cloudflare Pages)
 
-This site is hosted on **Cloudflare Pages**.
+This site is hosted on **Cloudflare Pages**. Full step-by-step instructions —
+deploying, pointing `snap311.app` at Pages, cleaning up DNS records, and API
+token permissions — are in **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
 
 **Via Git integration (recommended):** connect this repo in the Cloudflare
 dashboard with:
