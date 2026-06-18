@@ -8,15 +8,20 @@ Everything you need to build, deploy, point the domain, and manage DNS — witho
 - **Custom domain:** https://snap311.app — **live** (apex attached + validated, auto SSL)
 - **Registrar:** Namecheap · **DNS:** Cloudflare (nameservers delegated)
 
-### Current state (as of launch)
+### Current state
 
 - ✅ Site is live at https://snap311.app and https://snap311-website.pages.dev
 - ✅ Apex `snap311.app` resolves via a proxied `CNAME → snap311-website.pages.dev`
-- ⬜ `www.snap311.app` — **not set up** (optional; see §3 "www")
-- ⬜ Git auto-deploy — set up in the dashboard (see §2 Option A); until then,
-  deploys are manual via Wrangler (§2 Option B)
-- ⬜ "Open source" claim + repo links — **removed** until the app repo is
-  public (see §7)
+- ✅ **Git auto-deploy is live** — push to `main` → Cloudflare builds & deploys (~30–40s)
+- ✅ iOS **TestFlight** beta live; **Buy Me a Coffee** live
+- ⬜ iOS **App Store** — pending Apple approval (gated by `APP_STORE_LIVE`, §6)
+- ⬜ **Android** beta — "coming soon" (needs a public open-testing URL; gated by `ANDROID_LIVE`, §6)
+- ⬜ `www.snap311.app` — not set up (optional; see §3 "www")
+- ⬜ "Open source" claim + GitHub links — removed until the app repo is public (see §7)
+
+> **TL;DR for the next person:** edit files → `npm run build` → `git push`
+> (auto-deploys). Store/beta buttons are controlled by flags in
+> `src/data/links.ts` (see §6). No deploy token needed.
 
 ---
 
@@ -215,10 +220,11 @@ Account ID is also visible in the dashboard URL: `dash.cloudflare.com/<account-i
 
 | Change | File |
 |--------|------|
-| Any link (App Store, TestFlight, Buy Me a Coffee, GitHub, privacy) | `src/data/links.ts` |
+| All outbound links + store/beta feature flags | `src/data/links.ts` |
 | Hero text / buttons | `src/components/Hero.astro` |
 | "Why" narrative | `src/components/Why.astro` |
 | Steps / features / FAQ copy | `src/components/Steps.astro`, `Features.astro`, `Faq.astro` |
+| Support / bug-report channel | App Store reviews — see `Faq.astro` ("What if I find a bug?") |
 | Colors / fonts | `src/styles/global.css` (`@theme` block) |
 | OpenGraph share image | `public/img/og.png` (1200×630; meta tags in `Layout.astro`) |
 | Favicon | `public/favicon.ico` + `public/img/favicon.png` |
@@ -227,17 +233,38 @@ Account ID is also visible in the dashboard URL: `dash.cloudflare.com/<account-i
 After editing: `npm run build`, then either `git push` (Option A auto-deploy)
 or `npx wrangler pages deploy dist --project-name=snap311-website` (Option B).
 
+### Feature flags (in `src/data/links.ts`)
+
+The store/beta buttons are gated so we never link to a download that isn't
+publicly available yet. Each "off" flag renders a muted "… — coming soon"
+pill; flipping it on turns that into a real button. **After any change:
+`npm run build` then `git push`.**
+
+| Constant | Current | What it controls | How to turn on |
+|----------|---------|------------------|----------------|
+| `APP_STORE_LIVE` | `false` | iOS App Store button + the "Write an App Store review" link in the FAQ | Set to `true` once Apple approves the listing (the URL `APP_STORE_URL` 404s until then) |
+| `TESTFLIGHT_URL` | set (live) | iOS TestFlight button | Already live; set to `null` to hide it |
+| `ANDROID_LIVE` | `false` | Android beta button | Set to `true` **and** set `ANDROID_URL` to a PUBLIC Play **open testing** URL |
+| `ANDROID_URL` | internal-test link (not public) | the Android button's target | Replace with the open-testing opt-in URL before setting `ANDROID_LIVE = true` |
+
+> ⚠️ Don't set `ANDROID_LIVE = true` while `ANDROID_URL` still points at the
+> *internal testing* link — that link is invite-only (testers added by email,
+> max 100) and the public gets "not available." It must be an **open testing**
+> URL. For newer personal Play accounts, open testing/production is gated
+> behind a closed test (~12 testers, 14 days).
+
 ---
 
 ## 7. When the app repo goes public
 
 The app source repo (`github.com/kfiducia/snap311`) is **private** pending a
-security review, so the site currently does **not** advertise "open source"
-or link to the repo. The GitHub **issues** links (Support, FAQ) are kept —
-they start working as soon as the repo is public.
+security review, so the site currently has **no GitHub links at all**. It does
+not advertise "open source," and bug reports go through **App Store reviews**
+(see `Faq.astro`), not GitHub issues. The footer "Support" link points to the
+on-page FAQ (`/#faq`).
 
-Once you've reviewed it and flipped the repo to public, re-add two things
-(both reference `GITHUB_REPO`, already defined in `src/data/links.ts`):
+Once you've reviewed it and flipped the repo to public, optionally re-add two
+things (both reference `GITHUB_REPO`, already defined in `src/data/links.ts`):
 
 1. **`src/components/Features.astro`** — add back the "Open source" line below
    the feature list:
@@ -260,11 +287,16 @@ Then `npm run build` and deploy.
 
 ## 8. Launch checklist / known follow-ups
 
-- [ ] Set up Git auto-deploy (§2 Option A) so pushes deploy themselves.
+Open:
+- [ ] **iOS App Store:** when Apple approves, set `APP_STORE_LIVE = true` (§6) → lights up the App Store button + the FAQ review link.
+- [ ] **Android:** finish the Play closed test (~12 testers, 14 days), set up **open testing**, then put that public URL in `ANDROID_URL` and set `ANDROID_LIVE = true` (§6).
+- [ ] **App repo public:** after the security review, optionally re-add the open-source links (§7).
 - [ ] (Optional) Add `www.snap311.app` (§3 "www").
-- [ ] App Store button 404s until Apple approves the v1.0 review — it starts
-      working automatically once approved; no change needed.
-- [ ] After the security review, make the app repo public and re-add the
-      open-source links (§7).
-- [x] Custom domain `snap311.app` live with auto SSL.
-- [x] OpenGraph card, favicon, privacy + TestFlight + Buy-Me-a-Coffee links.
+- [ ] (Optional) Set up email forwarding for `@snap311.app` via Cloudflare Email Routing (dashboard → Email → Email Routing; catch-all → your address).
+
+Done:
+- [x] Site built (Astro + Tailwind), live at https://snap311.app with auto SSL.
+- [x] Custom domain attached; DNS on Cloudflare; parking records cleaned up.
+- [x] **Git auto-deploy is live** — every push to `main` builds & deploys (§2 Option A).
+- [x] OpenGraph card, favicon, privacy link, TestFlight (iOS) + Buy-Me-a-Coffee live.
+- [x] Bug reports via App Store reviews; no GitHub links on the public site.
