@@ -1,12 +1,56 @@
 [
   {
+    "kind": "ota",
     "version": "0.2.0",
-    "date": "2026-06-17",
+    "date": "2026-06-18",
     "changes": [
       {
         "type": "Added",
         "text": "A banner now appears when DC 311 can't be reached (their service is down, or you're offline) that's honest about what still works: you can take photos, fill out reports, and tap Submit, and we'll save them and send automatically when the connection's back. It clears itself the moment the service responds."
       },
+      {
+        "type": "Changed",
+        "text": "Diagnostics screen: the toggle is now labeled Error reports (more honest — that's all that's actually sent), and the description no longer mentions the underlying service. The footer's GitHub link has been removed for now."
+      },
+      {
+        "type": "Changed",
+        "text": "\"Pick the spot\" on the map now resolves the address live as you move the pin and shows whether the spot is usable: the matched street address (good) or a warning that there's no street address there (just a zipcode), so you know before committing. When the pin is far from its matched address (the issue is off in a park, lot, or alley — a scooter in the woods), you can opt to attach a precise map link to the exact spot — added to the report's location details. If the spot has no street address at all, the app tells you to move the pin onto a building or enter a nearby address, and offers to add the exact coordinates to the location details."
+      },
+      {
+        "type": "Changed",
+        "text": "Diagnostics (Settings): the recent-events list now shows a short preview with the app version visible without scrolling past hundreds of rows. \"View all events\" opens the full log on its own screen, filterable by level (errors / warnings / info / debug)."
+      },
+      {
+        "type": "Changed",
+        "text": "Report forms now open instantly from a local cache and refresh in the background, instead of waiting on the network each time. You can fill out and queue a report even when the DC 311 backend is slow or down (it sends once it recovers), and if you haven't started filling it in yet, the form quietly updates to the latest version of the questions."
+      },
+      {
+        "type": "Fixed",
+        "text": "Photo uploads no longer spin forever when you walk from WiFi onto cellular (or any other connection drop). The app now watches for upload progress and, if nothing has moved for ~20 seconds, gives up on the current attempt — your photo is kept and the upload is automatically retried as soon as your signal comes back. You'll see a banner on the report screen explaining what's happening if the upload is slow or has stalled, and you can submit the report anyway: it'll be saved and the photo will catch up in the background. Captured photos are now also stashed safely the moment you take them, so you won't lose a shot if iOS reclaims its temp cache while you're filling out the form."
+      },
+      {
+        "type": "Fixed",
+        "text": "Network requests now time out after 15 seconds instead of spinning forever on a flaky connection. Submitting a report, looking up an address, the map's \"Use this location,\" and \"My reports\" no longer hang indefinitely — and a timed-out submit is saved and retried automatically, never lost."
+      },
+      {
+        "type": "Fixed",
+        "text": "The keyboard no longer covers the text field you're typing in — the form, \"Your info,\" and \"Add a past report\" screens now scroll the focused field into view when the keyboard appears."
+      },
+      {
+        "type": "Fixed",
+        "text": "If a report category fails to load (e.g. the DC 311 backend times out with a 504), the report screen now shows a \"Retry\" instead of spinning forever."
+      },
+      {
+        "type": "Fixed",
+        "text": "The Settings/Diagnostics footer now shows the app's real build number instead of \"build ?\"."
+      }
+    ]
+  },
+  {
+    "kind": "build",
+    "version": "0.2.0",
+    "date": "2026-06-17",
+    "changes": [
       {
         "type": "Added",
         "text": "Delete reports from \"My reports\": swipe a row left, or use \"Remove from my reports\" on the detail screen. Removing a filed report only clears it from your list (the 311 request is unaffected); discarding an unsent report stops it from being filed."

@@ -1,12 +1,11 @@
 ---
-import { latestRelease, formatReleaseDate, teaser } from "../data/changelog";
+import { latestEntry, formatReleaseDate, teaser } from "../data/changelog";
 
 // How many changes to preview on the homepage; the rest live on /changelog.
 const MAX_ITEMS = 6;
-const items = latestRelease ? latestRelease.changes.slice(0, MAX_ITEMS) : [];
-const remaining = latestRelease
-  ? latestRelease.changes.length - items.length
-  : 0;
+const items = latestEntry ? latestEntry.changes.slice(0, MAX_ITEMS) : [];
+const remaining = latestEntry ? latestEntry.changes.length - items.length : 0;
+const isOta = latestEntry?.kind === "ota";
 
 const labelClass: Record<string, string> = {
   Added: "bg-navy/10 text-navy",
@@ -19,7 +18,7 @@ const labelClass: Record<string, string> = {
 ---
 
 {
-  latestRelease && (
+  latestEntry && (
     <section class="bg-offwhite py-16 sm:py-20" aria-labelledby="whatsnew-heading">
       <div class="mx-auto max-w-2xl px-6">
         <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
@@ -29,21 +28,36 @@ const labelClass: Record<string, string> = {
           >
             What's new
           </h2>
-          <p class="text-sm font-medium text-muted">
-            <span class="font-semibold text-navy">v{latestRelease.version}</span>
-            <span aria-hidden="true"> · </span>
-            {formatReleaseDate(latestRelease.date)}
+          <p class="flex items-center gap-2 text-sm font-medium text-muted">
+            {isOta && (
+              <span class="rounded-full bg-brand/10 px-2 py-0.5 text-xs font-semibold text-brand">
+                OTA update
+              </span>
+            )}
+            <span>
+              {isOta ? "to " : ""}
+              <span class="font-semibold text-navy">v{latestEntry.version}</span>
+              <span aria-hidden="true"> · </span>
+              {formatReleaseDate(latestEntry.date)}
+            </span>
           </p>
         </div>
 
         <ul class="mt-8 space-y-4">
           {items.map((change) => (
             <li class="flex items-start gap-3">
-              <span
-                class={`mt-1 inline-block w-16 flex-shrink-0 rounded-full px-2 py-0.5 text-center text-xs font-semibold ${labelClass[change.type] ?? "bg-black/5 text-muted"}`}
-              >
-                {change.type}
-              </span>
+              {change.type ? (
+                <span
+                  class={`mt-1 inline-block w-16 flex-shrink-0 rounded-full px-2 py-0.5 text-center text-xs font-semibold ${labelClass[change.type] ?? "bg-black/5 text-muted"}`}
+                >
+                  {change.type}
+                </span>
+              ) : (
+                <span
+                  class="mt-2.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand"
+                  aria-hidden="true"
+                />
+              )}
               <span class="text-lg leading-relaxed text-ink">
                 {teaser(change.text)}
               </span>
@@ -57,7 +71,7 @@ const labelClass: Record<string, string> = {
             class="inline-flex items-center gap-1 font-semibold text-brand underline underline-offset-2 hover:text-navy"
           >
             {remaining > 0
-              ? `See the full changelog (${remaining} more in this release)`
+              ? `See the full changelog (${remaining} more in this update)`
               : "See the full changelog"}
             <span aria-hidden="true">→</span>
           </a>

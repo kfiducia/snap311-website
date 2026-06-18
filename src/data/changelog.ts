@@ -4,8 +4,10 @@
 // by `npm run sync:changelog` from the Snap311 app's CHANGELOG.md (the single
 // source of truth). Edit the app's CHANGELOG.md and re-run the sync instead.
 //
-// Only released versions appear here; the app changelog's "[Unreleased]"
-// section is intentionally excluded by the sync script.
+// Entries are a flat, newest-first timeline. Each entry is either a native
+// store BUILD (`kind: "build"`, changes grouped by type) or an over-the-air
+// OTA update batch (`kind: "ota"`, untyped changes shipped to an existing
+// version). The app changelog's "[Unreleased]" section is excluded by the sync.
 
 import data from "./changelog.json";
 
@@ -18,20 +20,21 @@ export type ChangeType =
   | "Security";
 
 export interface Change {
-  type: ChangeType;
+  type?: ChangeType; // present on build entries; absent on OTA entries
   text: string;
 }
 
-export interface Release {
-  version: string;
+export interface Entry {
+  kind: "build" | "ota";
+  version: string; // the build's version, or the version an OTA targets
   date: string; // ISO 8601, e.g. "2026-06-17"
   changes: Change[];
 }
 
-// Newest first (the sync script preserves CHANGELOG.md order).
-export const releases: Release[] = data as Release[];
+// Newest first (OTA batches sort ahead of the build they target).
+export const entries: Entry[] = data as Entry[];
 
-export const latestRelease: Release | undefined = releases[0];
+export const latestEntry: Entry | undefined = entries[0];
 
 // "June 17, 2026" — parsed as UTC so the day doesn't shift by timezone.
 export function formatReleaseDate(iso: string): string {

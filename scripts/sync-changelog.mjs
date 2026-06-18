@@ -1,17 +1,23 @@
 #!/usr/bin/env node
 // Sync the website's changelog data from the Snap311 app's CHANGELOG.md.
 //
-// The app's CHANGELOG.md (Keep a Changelog format) is the single source of
-// truth. This script parses it and writes src/data/changelog.json, which the
-// site renders. RELEASED versions only — the "[Unreleased]" section is skipped
-// on purpose, since those changes aren't in users' hands yet.
+// The app's CHANGELOG.md (Keep a Changelog format, extended for OTA updates) is
+// the single source of truth. This script parses it into src/data/changelog.json
+// as a flat, newest-first list of ENTRIES, where an entry is either:
+//
+//   - a native store BUILD:   `## [x.y.z] - YYYY-MM-DD`, with its changes
+//     grouped under `### Added/Changed/Fixed/...`
+//   - an OTA update batch:    `### OTA updates to <version>` then a dated
+//     `#### YYYY-MM-DD` block of (untyped) bullets, shipped over-the-air to
+//     installs of <version>
+//
+// RELEASED content only — the `[Unreleased]` section is skipped on purpose,
+// since those changes aren't in users' hands yet. OTA batches are newer than
+// the build they target, so entries are sorted by date, newest first.
 //
 // Usage:
 //   node scripts/sync-changelog.mjs <path-to-CHANGELOG.md>
 //   SNAP311_CHANGELOG=/abs/path/CHANGELOG.md node scripts/sync-changelog.mjs
-//
-// Intended to be invoked by the app repo's release workflow, which then
-// commits + pushes this website repo.
 
 import { readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -41,64 +47,112 @@ function clean(s) {
     .trim();
 }
 
-const KNOWN_TYPES = new Set([
-  "Added",
-  "Changed",
-  "Fixed",
-  "Removed",
-  "Deprecated",
-  "Security",
-]);
-
 const reRelease = /^##\s+\[([^\]]+)\]\s*-\s*(\d{4}-\d{2}-\d{2})/;
 const reUnreleased = /^##\s+\[unreleased\]/i;
-const reHeading = /^##\s+/;
+const reOtaSection = /^###\s+OTA updates to\s+(.+?)\s*$/i;
+const reOtaDate = /^####\s+(\d{4}-\d{2}-\d{2})/;
 const reType = /^###\s+(\w+)\s*$/;
+// Optional type markers inside an OTA batch — either `##### Fixed` subheadings
+// or a whole-line `**Fixed**` bold marker. If OTA items aren't categorized,
+// they're just a flat bullet list and stay untyped.
+const reOtaType = /^(?:#####\s+|\*\*)(\w+)(?:\*\*)?\s*$/;
+const reHeading = /^##\s/; // any other section-level heading
 const reBullet = /^[-*]\s+(.*)$/;
 
 const md = await readFile(resolve(src), "utf8");
 const lines = md.split("\n");
 
-const releases = [];
-let cur = null; // current release object
-let type = null; // current change type heading
+const entries = [];
+let cur = null; // current build entry
+let curType = null; // current `### Type` within a build
+let curOta = null; // current dated OTA batch entry
+let otaVersion = null; // version the active OTA section targets
+let mode = "none"; // "build" | "ota" | "none"
 let buf = null; // lines of the bullet being read
 
-function flushBullet() {
-  if (cur && type && buf) {
-    const text = clean(buf.join(" "));
-    if (text) cur.changes.push({ type, text });
-  }
+function pushBullet() {
+  if (!buf) return;
+  const text = clean(buf.join(" "));
   buf = null;
+  if (!text) return;
+  if (mode === "build" && cur && curType) {
+    cur.changes.push({ type: curType, text });
+  } else if (mode === "ota" && curOta) {
+    // OTA items are typed only if the changelog categorizes them.
+    curOta.changes.push(curType ? { type: curType, text } : { text });
+  }
 }
-function flushRelease() {
-  flushBullet();
-  if (cur) releases.push(cur);
-  cur = null;
-  type = null;
+
+function resetSection() {
+  pushBullet();
+  curType = null;
 }
 
 for (const line of lines) {
   const mRel = line.match(reRelease);
   if (mRel) {
-    flushRelease();
-    cur = { version: mRel[1], date: mRel[2], changes: [] };
+    resetSection();
+    cur = { kind: "build", version: mRel[1], date: mRel[2], changes: [] };
+    curOta = null;
+    otaVersion = null;
+    mode = "build";
+    entries.push(cur);
     continue;
   }
-  // Skip the unreleased section (and any other section-level heading).
-  if (reUnreleased.test(line) || reHeading.test(line)) {
-    flushRelease();
+  // Skip the unreleased section.
+  if (reUnreleased.test(line)) {
+    resetSection();
+    cur = null;
+    curOta = null;
+    mode = "none";
+    continue;
+  }
+  const mOta = line.match(reOtaSection);
+  if (mOta) {
+    resetSection();
+    otaVersion = mOta[1];
+    curOta = null; // a `#### date` opens the actual batch
+    mode = "ota";
+    continue;
+  }
+  const mOtaDate = line.match(reOtaDate);
+  if (mOtaDate && otaVersion) {
+    resetSection();
+    curOta = {
+      kind: "ota",
+      version: otaVersion,
+      date: mOtaDate[1],
+      changes: [],
+    };
+    mode = "ota";
+    entries.push(curOta);
+    continue;
+  }
+  // Optional category marker inside an OTA batch (`##### Fixed` or `**Fixed**`).
+  const mOtaType = line.match(reOtaType);
+  if (mOtaType && mode === "ota" && curOta) {
+    pushBullet();
+    curType = mOtaType[1];
     continue;
   }
   const mType = line.match(reType);
-  if (mType && cur) {
-    flushBullet();
-    type = KNOWN_TYPES.has(mType[1]) ? mType[1] : mType[1];
+  if (mType && cur && mode !== "ota") {
+    pushBullet();
+    curType = mType[1];
+    mode = "build";
+    continue;
+  }
+  // Any other section heading ends the current context.
+  if (reHeading.test(line)) {
+    resetSection();
+    cur = null;
+    curOta = null;
+    mode = "none";
     continue;
   }
   const mBul = line.match(reBullet);
-  if (mBul && cur && type) {
-    flushBullet();
+  if (mBul) {
+    pushBullet();
     buf = [mBul[1]];
     continue;
   }
@@ -109,25 +163,41 @@ for (const line of lines) {
   }
   // Blank line ends the current bullet.
   if (line.trim() === "") {
-    flushBullet();
+    pushBullet();
     continue;
   }
+  // Everything else (italic notes, blockquotes, reference links) is ignored.
 }
-flushRelease();
+pushBullet();
 
-if (!releases.length) {
+// Drop empty entries (e.g. a build whose changes were all unreleased).
+const kept = entries.filter((e) => e.changes.length > 0);
+
+// Newest first. OTA batches are newer than the build they target, so on a date
+// tie, OTA sorts ahead of the build.
+kept.sort((a, b) => {
+  if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+  if (a.kind !== b.kind) return a.kind === "ota" ? -1 : 1;
+  return 0;
+});
+
+if (!kept.length) {
   console.error(
-    `Error: parsed 0 released versions from ${src}. ` +
+    `Error: parsed 0 released entries from ${src}. ` +
       "Expected '## [x.y.z] - YYYY-MM-DD' headings.",
   );
   process.exit(1);
 }
 
-const json = JSON.stringify(releases, null, 2) + "\n";
+const json = JSON.stringify(kept, null, 2) + "\n";
 await writeFile(OUT, json);
 
-const total = releases.reduce((n, r) => n + r.changes.length, 0);
+const builds = kept.filter((e) => e.kind === "build").length;
+const otas = kept.filter((e) => e.kind === "ota").length;
+const total = kept.reduce((n, e) => n + e.changes.length, 0);
+const top = kept[0];
 console.log(
-  `Wrote ${releases.length} release(s), ${total} change(s) to ` +
-    `src/data/changelog.json (latest: v${releases[0].version}).`,
+  `Wrote ${kept.length} entr${kept.length === 1 ? "y" : "ies"} ` +
+    `(${builds} build, ${otas} OTA), ${total} change(s) to ` +
+    `src/data/changelog.json (latest: ${top.kind === "ota" ? "OTA → v" : "v"}${top.version}, ${top.date}).`,
 );
