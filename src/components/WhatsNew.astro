@@ -1,0 +1,68 @@
+---
+import { latestRelease, formatReleaseDate, teaser } from "../data/changelog";
+
+// How many changes to preview on the homepage; the rest live on /changelog.
+const MAX_ITEMS = 6;
+const items = latestRelease ? latestRelease.changes.slice(0, MAX_ITEMS) : [];
+const remaining = latestRelease
+  ? latestRelease.changes.length - items.length
+  : 0;
+
+const labelClass: Record<string, string> = {
+  Added: "bg-navy/10 text-navy",
+  Changed: "bg-brand/10 text-brand",
+  Fixed: "bg-cream text-navy-deep",
+  Removed: "bg-black/5 text-muted",
+  Deprecated: "bg-black/5 text-muted",
+  Security: "bg-brand/10 text-brand",
+};
+---
+
+{
+  latestRelease && (
+    <section class="bg-offwhite py-16 sm:py-20" aria-labelledby="whatsnew-heading">
+      <div class="mx-auto max-w-2xl px-6">
+        <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h2
+            id="whatsnew-heading"
+            class="text-3xl font-bold tracking-tight text-navy-deep sm:text-4xl"
+          >
+            What's new
+          </h2>
+          <p class="text-sm font-medium text-muted">
+            <span class="font-semibold text-navy">v{latestRelease.version}</span>
+            <span aria-hidden="true"> · </span>
+            {formatReleaseDate(latestRelease.date)}
+          </p>
+        </div>
+
+        <ul class="mt-8 space-y-4">
+          {items.map((change) => (
+            <li class="flex items-start gap-3">
+              <span
+                class={`mt-1 inline-block w-16 flex-shrink-0 rounded-full px-2 py-0.5 text-center text-xs font-semibold ${labelClass[change.type] ?? "bg-black/5 text-muted"}`}
+              >
+                {change.type}
+              </span>
+              <span class="text-lg leading-relaxed text-ink">
+                {teaser(change.text)}
+              </span>
+            </li>
+          ))}
+        </ul>
+
+        <p class="mt-8">
+          <a
+            href="/changelog"
+            class="inline-flex items-center gap-1 font-semibold text-brand underline underline-offset-2 hover:text-navy"
+          >
+            {remaining > 0
+              ? `See the full changelog (${remaining} more in this release)`
+              : "See the full changelog"}
+            <span aria-hidden="true">→</span>
+          </a>
+        </p>
+      </div>
+    </section>
+  )
+}

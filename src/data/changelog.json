@@ -1,0 +1,56 @@
+[
+  {
+    "version": "0.2.0",
+    "date": "2026-06-17",
+    "changes": [
+      {
+        "type": "Added",
+        "text": "A banner now appears when DC 311 can't be reached (their service is down, or you're offline) that's honest about what still works: you can take photos, fill out reports, and tap Submit, and we'll save them and send automatically when the connection's back. It clears itself the moment the service responds."
+      },
+      {
+        "type": "Added",
+        "text": "Delete reports from \"My reports\": swipe a row left, or use \"Remove from my reports\" on the detail screen. Removing a filed report only clears it from your list (the 311 request is unaffected); discarding an unsent report stops it from being filed."
+      },
+      {
+        "type": "Added",
+        "text": "Tap any report (in \"My reports\" or the clipboard preview) to open a full detail screen: status and the complete timeline/SLA dates, the report description, attached photos (tap to open full size), the agency's service notice, and location with ward/ANC and an \"Open in Maps\" button. Tap the request ID to copy it to the clipboard."
+      },
+      {
+        "type": "Added",
+        "text": "\"Add a past report\" now detects a service request ID on your clipboard, previews that report (type, status, address), and lets you add it with a single tap instead of typing the ID."
+      },
+      {
+        "type": "Added",
+        "text": "\"My reports\" now shows more status detail for each filed request: a clear status label, the handling department, and the expected completion date (or a \"past expected date\" flag, or the completion date once it's done)."
+      },
+      {
+        "type": "Added",
+        "text": "Attach multiple photos to a report. The report screen shows a thumbnail strip; add from the camera one at a time or pick several at once from your library (up to 5). Each photo has a remove button, and photos upload in the background so you're never left waiting."
+      },
+      {
+        "type": "Added",
+        "text": "Long service descriptions now have a Show more / Show less toggle, expand to a larger, easier-to-read size, and any links in them are tappable."
+      },
+      {
+        "type": "Fixed",
+        "text": "Picking the wrong category after snapping a photo no longer loses the photo. You can change the category from the report screen (or with Back) and your photo and location carry over — no need to re-shoot."
+      },
+      {
+        "type": "Fixed",
+        "text": "Submitting a report without a photo is allowed (photos are optional). The Submit button no longer implies a photo is required; it now tells you what's actually missing (an address, or your contact info)."
+      },
+      {
+        "type": "Changed",
+        "text": "\"My reports\" now shows active reports by default — open ones plus anything closed in the last 7 days — and tucks older closed/canceled reports behind a \"Show archived\" toggle so the list stays manageable over time."
+      },
+      {
+        "type": "Changed",
+        "text": "The \"Your info\" screen makes it clear you only need to fill it in once — your contact details are saved on your device and reused automatically for future reports."
+      },
+      {
+        "type": "Changed",
+        "text": "The Diagnostics screen no longer displays the raw Sentry DSN."
+      }
+    ]
+  }
+]
