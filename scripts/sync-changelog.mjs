@@ -192,16 +192,24 @@ pushBullet();
 // Drop empty entries (e.g. a build whose changes were all unreleased).
 const kept = entries.filter((e) => e.changes.length > 0);
 
-// An OTA update ships on top of its target version's native build, so stamp
-// each OTA with that version's build numbers (for "Applies to …" on the site).
-const buildsByVersion = new Map();
+// An OTA ships on top of whatever native build a user has, so stamp each OTA
+// with the build numbers in effect on its date: for each platform, the most
+// recent build entry (same version, date <= the OTA's) that names it. This
+// handles platform-only rebuilds — e.g. an Android-3 build dated after the
+// original build means later OTAs correctly read "Android 3" while earlier
+// ones still read "Android 2".
+const buildEntries = kept.filter((e) => e.kind === "build" && e.builds);
 for (const e of kept) {
-  if (e.kind === "build" && e.builds) buildsByVersion.set(e.version, e.builds);
-}
-for (const e of kept) {
-  if (e.kind === "ota" && !e.builds && buildsByVersion.has(e.version)) {
-    e.builds = buildsByVersion.get(e.version);
+  if (e.kind !== "ota" || e.builds) continue;
+  const prior = buildEntries
+    .filter((b) => b.version === e.version && b.date <= e.date)
+    .sort((a, b) => (a.date < b.date ? -1 : 1)); // oldest first
+  if (!prior.length) continue;
+  const byLabel = new Map();
+  for (const b of prior) {
+    for (const ref of b.builds) byLabel.set(ref.label, ref); // later date wins
   }
+  if (byLabel.size) e.builds = [...byLabel.values()];
 }
 
 // Newest first. OTA batches are newer than the build they target, so on a date
