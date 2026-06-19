@@ -212,13 +212,13 @@ for (const e of kept) {
   if (byLabel.size) e.builds = [...byLabel.values()];
 }
 
-// Newest first. OTA batches are newer than the build they target, so on a date
-// tie, OTA sorts ahead of the build.
-kept.sort((a, b) => {
-  if (a.date !== b.date) return a.date < b.date ? 1 : -1;
-  if (a.kind !== b.kind) return a.kind === "ota" ? -1 : 1;
-  return 0;
-});
+// Newest date first. For entries that share a date (e.g. same-day OTAs, or an
+// OTA and a native rebuild on the same day), preserve the order they appear in
+// CHANGELOG.md — the author writes it newest-first, and that's a more reliable
+// signal than any kind-based assumption (a same-day native rebuild can ship
+// after that day's OTAs, which the old "OTA always before build" rule got
+// wrong). Array.sort is stable, so returning 0 keeps document order.
+kept.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 
 if (!kept.length) {
   console.error(

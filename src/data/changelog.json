@@ -1,5 +1,22 @@
 [
   {
+    "kind": "build",
+    "version": "0.2.0",
+    "date": "2026-06-19",
+    "changes": [
+      {
+        "type": "Fixed",
+        "text": "Android: opening \"Pin on map\" no longer crashes the app. Earlier Android builds shipped without the Google Maps key, so tapping into the map closed the app instantly; the map now loads normally. (iOS was unaffected.)"
+      }
+    ],
+    "builds": [
+      {
+        "label": "Android",
+        "number": "3"
+      }
+    ]
+  },
+  {
     "kind": "ota",
     "version": "0.2.0",
     "date": "2026-06-19",
@@ -65,23 +82,6 @@
         "label": "iOS",
         "number": "9"
       },
-      {
-        "label": "Android",
-        "number": "3"
-      }
-    ]
-  },
-  {
-    "kind": "build",
-    "version": "0.2.0",
-    "date": "2026-06-19",
-    "changes": [
-      {
-        "type": "Fixed",
-        "text": "Android: opening \"Pin on map\" no longer crashes the app. Earlier Android builds shipped without the Google Maps key, so tapping into the map closed the app instantly; the map now loads normally. (iOS was unaffected.)"
-      }
-    ],
-    "builds": [
       {
         "label": "Android",
         "number": "3"
