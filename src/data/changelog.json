@@ -6,6 +6,40 @@
     "changes": [
       {
         "type": "Added",
+        "text": "If error reporting is turned off, you can now open a specific error in Diagnostics, review exactly what it contains, and choose to send just that one to the developer. The event list marks each report Sent or Not sent at a glance, and a sent report is never sent twice. (With error reporting on, errors send automatically, so there's nothing to do.)"
+      },
+      {
+        "type": "Changed",
+        "text": "The Settings version footer is now plainly informational — it just shows your app version, build, and current update bundle (tap to copy if support ever asks), instead of the more clinical \"report this id\" framing."
+      },
+      {
+        "type": "Fixed",
+        "text": "Errors and warnings now stay in the Diagnostics log instead of being pushed out by routine activity (the log used to drop the oldest events regardless of importance), so you can still find — and send — them later."
+      },
+      {
+        "type": "Fixed",
+        "text": "Opening an entry in the Diagnostics event log no longer makes the app sluggish. It now opens in a scrollable sheet, and error entries no longer balloon in size internally (their breadcrumb context was nesting and compounding)."
+      }
+    ],
+    "bundle": "019ee043",
+    "builds": [
+      {
+        "label": "iOS",
+        "number": "9"
+      },
+      {
+        "label": "Android",
+        "number": "2"
+      }
+    ]
+  },
+  {
+    "kind": "ota",
+    "version": "0.2.0",
+    "date": "2026-06-19",
+    "changes": [
+      {
+        "type": "Added",
         "text": "A banner now appears at the top of the app whenever you have a report that hasn't been sent to DC 311 yet (queued, sending, or failed) — so a report saved for later can't quietly slip your mind. Tap it to open \"My reports\" and see status, retry, or finish anything that's missing info."
       },
       {
