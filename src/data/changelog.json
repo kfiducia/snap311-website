@@ -2,12 +2,46 @@
   {
     "kind": "ota",
     "version": "0.2.0",
-    "date": "2026-06-18",
+    "date": "2026-06-19",
     "changes": [
       {
         "type": "Added",
-        "text": "A banner now appears when DC 311 can't be reached (their service is down, or you're offline) that's honest about what still works: you can take photos, fill out reports, and tap Submit, and we'll save them and send automatically when the connection's back. It clears itself the moment the service responds."
+        "text": "A banner now appears at the top of the app whenever you have a report that hasn't been sent to DC 311 yet (queued, sending, or failed) — so a report saved for later can't quietly slip your mind. Tap it to open \"My reports\" and see status, retry, or finish anything that's missing info."
       },
+      {
+        "type": "Added",
+        "text": "\"Pin on map\" now has a center-on-my-location button — tap it to jump the map to where you are instead of panning by hand."
+      },
+      {
+        "type": "Changed",
+        "text": "The Settings footer now leads with a bundle id you can tap to copy — the exact id of the code you're running (it changes with each over-the-air update, unlike the build number). Reporting it tells us precisely which version you're on, and it matches the ids in this changelog so you can see what's included. The app version and build number are still shown, as secondary detail."
+      },
+      {
+        "type": "Fixed",
+        "text": "Reports can no longer slip through with incomplete contact info and then fail to send. The app now reliably requires a last name plus an email or phone before submitting (previously a stray space in one of those fields could pass the check), and a saved report that's still missing that info is now flagged for you to fix in \"Your info\" instead of being retried against DC 311, which rejects it."
+      },
+      {
+        "type": "Fixed",
+        "text": "Taking a photo first and then choosing a category now behaves the same as choosing a category first: if your location is missing, outside DC, or has no street address, you get the same heads-up to enter the address — previously the camera-first flow stayed silent and could leave the address blank."
+      }
+    ],
+    "bundle": "019ede4e",
+    "builds": [
+      {
+        "label": "iOS",
+        "number": "9"
+      },
+      {
+        "label": "Android",
+        "number": "2"
+      }
+    ]
+  },
+  {
+    "kind": "ota",
+    "version": "0.2.0",
+    "date": "2026-06-18",
+    "changes": [
       {
         "type": "Changed",
         "text": "Diagnostics screen: the toggle is now labeled Error reports (more honest — that's all that's actually sent), and the description no longer mentions the underlying service. The footer's GitHub link has been removed for now."
@@ -21,16 +55,78 @@
         "text": "Diagnostics (Settings): the recent-events list now shows a short preview with the app version visible without scrolling past hundreds of rows. \"View all events\" opens the full log on its own screen, filterable by level (errors / warnings / info / debug)."
       },
       {
-        "type": "Changed",
-        "text": "Report forms now open instantly from a local cache and refresh in the background, instead of waiting on the network each time. You can fill out and queue a report even when the DC 311 backend is slow or down (it sends once it recovers), and if you haven't started filling it in yet, the form quietly updates to the latest version of the questions."
-      },
-      {
         "type": "Fixed",
         "text": "Photo uploads no longer spin forever when you walk from WiFi onto cellular (or any other connection drop). The app now watches for upload progress and, if nothing has moved for ~20 seconds, gives up on the current attempt — your photo is kept and the upload is automatically retried as soon as your signal comes back. You'll see a banner on the report screen explaining what's happening if the upload is slow or has stalled, and you can submit the report anyway: it'll be saved and the photo will catch up in the background. Captured photos are now also stashed safely the moment you take them, so you won't lose a shot if iOS reclaims its temp cache while you're filling out the form."
       },
       {
         "type": "Fixed",
         "text": "Network requests now time out after 15 seconds instead of spinning forever on a flaky connection. Submitting a report, looking up an address, the map's \"Use this location,\" and \"My reports\" no longer hang indefinitely — and a timed-out submit is saved and retried automatically, never lost."
+      }
+    ],
+    "bundle": "019edbdf",
+    "builds": [
+      {
+        "label": "iOS",
+        "number": "9"
+      },
+      {
+        "label": "Android",
+        "number": "2"
+      }
+    ]
+  },
+  {
+    "kind": "ota",
+    "version": "0.2.0",
+    "date": "2026-06-18",
+    "changes": [
+      {
+        "type": "Fixed",
+        "text": "The Settings/Diagnostics footer now shows the app's real build number instead of \"build ?\"."
+      }
+    ],
+    "bundle": "019edb01",
+    "builds": [
+      {
+        "label": "iOS",
+        "number": "9"
+      },
+      {
+        "label": "Android",
+        "number": "2"
+      }
+    ]
+  },
+  {
+    "kind": "ota",
+    "version": "0.2.0",
+    "date": "2026-06-18",
+    "changes": [
+      {
+        "type": "Added",
+        "text": "A banner now appears when DC 311 can't be reached (their service is down, or you're offline) that's honest about what still works: you can take photos, fill out reports, and tap Submit, and we'll save them and send automatically when the connection's back. It clears itself the moment the service responds."
+      }
+    ],
+    "bundle": "019ed832",
+    "builds": [
+      {
+        "label": "iOS",
+        "number": "9"
+      },
+      {
+        "label": "Android",
+        "number": "2"
+      }
+    ]
+  },
+  {
+    "kind": "ota",
+    "version": "0.2.0",
+    "date": "2026-06-18",
+    "changes": [
+      {
+        "type": "Changed",
+        "text": "Report forms now open instantly from a local cache and refresh in the background, instead of waiting on the network each time. You can fill out and queue a report even when the DC 311 backend is slow or down (it sends once it recovers), and if you haven't started filling it in yet, the form quietly updates to the latest version of the questions."
       },
       {
         "type": "Fixed",
@@ -39,10 +135,17 @@
       {
         "type": "Fixed",
         "text": "If a report category fails to load (e.g. the DC 311 backend times out with a 504), the report screen now shows a \"Retry\" instead of spinning forever."
+      }
+    ],
+    "bundle": "019ed808",
+    "builds": [
+      {
+        "label": "iOS",
+        "number": "9"
       },
       {
-        "type": "Fixed",
-        "text": "The Settings/Diagnostics footer now shows the app's real build number instead of \"build ?\"."
+        "label": "Android",
+        "number": "2"
       }
     ]
   },
@@ -94,6 +197,16 @@
       {
         "type": "Changed",
         "text": "The Diagnostics screen no longer displays the raw Sentry DSN."
+      }
+    ],
+    "builds": [
+      {
+        "label": "iOS",
+        "number": "9"
+      },
+      {
+        "label": "Android",
+        "number": "2"
       }
     ]
   }

@@ -47,10 +47,25 @@ function clean(s) {
     .trim();
 }
 
-const reRelease = /^##\s+\[([^\]]+)\]\s*-\s*(\d{4}-\d{2}-\d{2})/;
+// Build heading, with an optional trailing `(iOS 42, Android 17)` carrying
+// per-platform build numbers: group 3 is the parenthetical contents.
+const reRelease = /^##\s+\[([^\]]+)\]\s*-\s*(\d{4}-\d{2}-\d{2})\s*(?:\(([^)]*)\))?\s*$/;
 const reUnreleased = /^##\s+\[unreleased\]/i;
+
+// Pull `Platform Number` pairs out of a build parenthetical, e.g.
+// "iOS 42, Android 17" or "iOS build 42 · Android build 17".
+function parseBuilds(s) {
+  if (!s) return undefined;
+  const out = [];
+  const re = /([A-Za-z][A-Za-z.]*)\s+(?:build\s+)?(\d[\w.]*)/g;
+  let m;
+  while ((m = re.exec(s))) out.push({ label: m[1], number: m[2] });
+  return out.length ? out : undefined;
+}
 const reOtaSection = /^###\s+OTA updates to\s+(.+?)\s*$/i;
-const reOtaDate = /^####\s+(\d{4}-\d{2}-\d{2})/;
+// OTA batch date, with an optional `(a1b2c3d4)` carrying the EAS Update bundle
+// id this OTA shipped as: group 1 = date, group 2 = parenthetical (bundle id).
+const reOtaDate = /^####\s+(\d{4}-\d{2}-\d{2})\s*(?:\(([^)]*)\))?\s*$/;
 const reType = /^###\s+(\w+)\s*$/;
 // Optional type markers inside an OTA batch — either `##### Fixed` subheadings
 // or a whole-line `**Fixed**` bold marker. If OTA items aren't categorized,
@@ -93,6 +108,8 @@ for (const line of lines) {
   if (mRel) {
     resetSection();
     cur = { kind: "build", version: mRel[1], date: mRel[2], changes: [] };
+    const builds = parseBuilds(mRel[3]);
+    if (builds) cur.builds = builds;
     curOta = null;
     otaVersion = null;
     mode = "build";
@@ -124,6 +141,8 @@ for (const line of lines) {
       date: mOtaDate[1],
       changes: [],
     };
+    const bundle = (mOtaDate[2] || "").trim();
+    if (bundle) curOta.bundle = bundle;
     mode = "ota";
     entries.push(curOta);
     continue;
@@ -172,6 +191,18 @@ pushBullet();
 
 // Drop empty entries (e.g. a build whose changes were all unreleased).
 const kept = entries.filter((e) => e.changes.length > 0);
+
+// An OTA update ships on top of its target version's native build, so stamp
+// each OTA with that version's build numbers (for "Applies to …" on the site).
+const buildsByVersion = new Map();
+for (const e of kept) {
+  if (e.kind === "build" && e.builds) buildsByVersion.set(e.version, e.builds);
+}
+for (const e of kept) {
+  if (e.kind === "ota" && !e.builds && buildsByVersion.has(e.version)) {
+    e.builds = buildsByVersion.get(e.version);
+  }
+}
 
 // Newest first. OTA batches are newer than the build they target, so on a date
 // tie, OTA sorts ahead of the build.

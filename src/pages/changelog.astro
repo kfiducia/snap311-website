@@ -1,7 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import SiteFooter from "../components/SiteFooter.astro";
-import { entries, formatReleaseDate } from "../data/changelog";
+import { entries, formatReleaseDate, formatBuilds } from "../data/changelog";
 
 // Visual accent per change type.
 const typeStyle: Record<string, { label: string; dot: string }> = {
@@ -92,6 +92,24 @@ function groupByType(changes: { type?: string; text: string }[]) {
                   >
                     {formatReleaseDate(entry.date)}
                   </time>
+                  {isOta && entry.bundle && (
+                    <p class="mt-2 text-xs leading-relaxed text-muted">
+                      Bundle{" "}
+                      <code class="rounded bg-black/5 px-1 py-0.5 font-mono text-ink/80">
+                        {entry.bundle}
+                      </code>
+                    </p>
+                  )}
+                  {entry.builds && entry.builds.length > 0 && (
+                    <p
+                      class={`text-xs leading-relaxed text-muted ${isOta ? "mt-1" : "mt-2"}`}
+                    >
+                      {isOta ? "Runs on build " : "Build "}
+                      <span class="font-medium text-ink/70">
+                        {formatBuilds(entry.builds)}
+                      </span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Card — changes grouped by type; untyped groups (flat OTA
