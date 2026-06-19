@@ -29,7 +29,7 @@
       },
       {
         "label": "Android",
-        "number": "2"
+        "number": "3"
       }
     ]
   },
@@ -67,7 +67,7 @@
       },
       {
         "label": "Android",
-        "number": "2"
+        "number": "3"
       }
     ]
   },
@@ -105,7 +105,7 @@
       },
       {
         "label": "Android",
-        "number": "2"
+        "number": "3"
       }
     ]
   },
@@ -127,7 +127,7 @@
       },
       {
         "label": "Android",
-        "number": "2"
+        "number": "3"
       }
     ]
   },
@@ -149,7 +149,7 @@
       },
       {
         "label": "Android",
-        "number": "2"
+        "number": "3"
       }
     ]
   },
@@ -179,7 +179,7 @@
       },
       {
         "label": "Android",
-        "number": "2"
+        "number": "3"
       }
     ]
   },
@@ -214,6 +214,10 @@
       },
       {
         "type": "Fixed",
+        "text": "Android (build 3): opening \"Pin on map\" no longer crashes the app. Earlier Android builds shipped without the Google Maps key, so tapping into the map closed the app instantly; the map now loads normally. (iOS was unaffected, and this fix needed a new Android build — it can't ship over-the-air.)"
+      },
+      {
+        "type": "Fixed",
         "text": "Picking the wrong category after snapping a photo no longer loses the photo. You can change the category from the report screen (or with Back) and your photo and location carry over — no need to re-shoot."
       },
       {
@@ -240,7 +244,7 @@
       },
       {
         "label": "Android",
-        "number": "2"
+        "number": "3"
       }
     ]
   }
