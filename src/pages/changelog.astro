@@ -63,6 +63,14 @@ function groupByType(changes: { type?: string; text: string }[]) {
         {
           entries.map((entry, i) => {
             const isOta = entry.kind === "ota";
+            // Untyped lines are "notes" (a thank-you, a heads-up) — but only when
+            // the entry also has categorized changes. A fully-untyped OTA is just
+            // a flat bullet list and stays as-is.
+            const hasTyped = entry.changes.some((c) => c.type);
+            const notes = hasTyped ? entry.changes.filter((c) => !c.type) : [];
+            const body = hasTyped
+              ? entry.changes.filter((c) => c.type)
+              : entry.changes;
             return (
               <section
                 aria-labelledby={`entry-${i}`}
@@ -116,7 +124,16 @@ function groupByType(changes: { type?: string; text: string }[]) {
                     lists) render without a heading. */}
                 <div class="rounded-2xl border border-black/10 bg-white p-6 shadow-sm sm:p-8">
                   <div class="space-y-8">
-                    {groupByType(entry.changes).map((group) => (
+                    {notes.length > 0 && (
+                      <div class="space-y-2 border-l-2 border-navy/20 pl-4">
+                        {notes.map((note) => (
+                          <p class="text-base leading-relaxed text-ink/80">
+                            {note.text}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    {groupByType(body).map((group) => (
                       <div>
                         {group.type && (
                           <h3
