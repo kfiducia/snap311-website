@@ -1,5 +1,34 @@
 [
   {
+    "kind": "ota",
+    "version": "0.2.0",
+    "date": "2026-06-20",
+    "changes": [
+      {
+        "text": "Thank you to our beta testers — your reports are what surfaced the fixes below. Please keep them coming."
+      },
+      {
+        "type": "Fixed",
+        "text": "Report types with conditional questions (where one answer reveals follow-up questions — e.g. \"Roadway marking / striping\") now work. The form shows only the questions that apply to your answers and sends only those, so DC 311 no longer rejects the report for answering a question that didn't apply."
+      },
+      {
+        "type": "Fixed",
+        "text": "When DC 311 can't accept a report for a reason you need to fix (not just a temporary connection issue), the app now tells you why instead of quietly saving it and retrying in the background forever."
+      }
+    ],
+    "bundle": "019ee4fc",
+    "builds": [
+      {
+        "label": "iOS",
+        "number": "9"
+      },
+      {
+        "label": "Android",
+        "number": "3"
+      }
+    ]
+  },
+  {
     "kind": "build",
     "version": "0.2.0",
     "date": "2026-06-19",
