@@ -5,6 +5,32 @@
     "date": "2026-06-20",
     "changes": [
       {
+        "type": "Added",
+        "text": "Settings → \"See what's new\" opens an in-app changelog: what's included in the version on your device, and what's waiting in your next update."
+      },
+      {
+        "type": "Fixed",
+        "text": "A report that got stuck because it included an answer to a follow-up question that no longer applied now fixes itself and sends on its own — the app cleans up the saved report against the current questions before retrying, instead of leaving it failed. (Previously you'd have had to re-create it.)"
+      }
+    ],
+    "bundle": "019ee52a",
+    "builds": [
+      {
+        "label": "iOS",
+        "number": "9"
+      },
+      {
+        "label": "Android",
+        "number": "3"
+      }
+    ]
+  },
+  {
+    "kind": "ota",
+    "version": "0.2.0",
+    "date": "2026-06-20",
+    "changes": [
+      {
         "text": "Thank you to our beta testers — your reports are what surfaced the fixes below. Please keep them coming."
       },
       {
