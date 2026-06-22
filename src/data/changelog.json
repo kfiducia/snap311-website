@@ -1,5 +1,56 @@
 [
   {
+    "kind": "build",
+    "version": "0.3.0",
+    "date": "2026-06-21",
+    "changes": [
+      {
+        "type": "Added",
+        "text": "Achievements & civic points: earn rewards as you report — a bonus the first time you try each category, a milestone every 5 reports, a bump for each day you keep a streak going, and fun one-time trophies (First Report, Power User, streaks, \"Rat King\" for rodent reports, Night Owl, and more). Rewards pop with a confetti celebration on the confirmation screen, and \"Your info\" shows your civic-points total, reports, categories, best streak, and trophy collection."
+      },
+      {
+        "type": "Added",
+        "text": "DC 311 sign-in (optional): sign in to your DC 311 account to pull your full report history and DC's responses into the app, and to auto-fill your contact info so you don't have to type it. Entirely optional — you can keep reporting without an account. The home screen shows your sign-in status; if a session expires, your saved contact info is kept and you're prompted to sign in again."
+      },
+      {
+        "type": "Added",
+        "text": "Nearby reports map: a new \"Nearby reports\" screen (from the home screen) shows open, in-progress, and recently-closed DC 311 requests around you on a map — color- and icon-coded by type, with a ring that fills as a request nears its expected completion date — so you can check whether something you spotted is already reported before filing a duplicate. Tap a pin for details."
+      },
+      {
+        "type": "Added",
+        "text": "Favorite report types: tap the star on any category to pin it to a Favorites list at the top of the home screen for quick access; tap again to remove."
+      },
+      {
+        "type": "Added",
+        "text": "Export / share a report: a report's detail screen can now share a plain-text summary (type, status, dates, location, your description, the agency notice) via the system share sheet — handy for keeping a record or escalating one that was closed but isn't actually fixed."
+      },
+      {
+        "type": "Added",
+        "text": "\"Report this issue again\": from a report's detail screen, start a fresh report pre-filled from it — same category and location, with a note that references the original (\"previous request 26-XXXX … but the issue isn't resolved\"), so you don't retype it."
+      },
+      {
+        "type": "Added",
+        "text": "\"New\" badge in \"My reports\" marks any report with activity (a status change or a new response) since you last opened it; it clears when you view the report."
+      },
+      {
+        "type": "Changed",
+        "text": "The home screen now shows your Favorites instead of an auto-generated \"recent reports\" list, so it loads instantly with no network wait."
+      },
+      {
+        "type": "Changed",
+        "text": "Settings moved to a gear icon in the top-left of the home screen (freeing the spot it used for the new \"Nearby reports\" entry)."
+      },
+      {
+        "type": "Changed",
+        "text": "\"My reports\" now opens instantly — it shows your last-loaded reports right away and refreshes their status in the background, instead of waiting on the network each time. Pull down to refresh on demand."
+      },
+      {
+        "type": "Fixed",
+        "text": "\"My reports\" now lists reports newest-first (by latest activity), including the archived section, instead of an inconsistent order."
+      }
+    ]
+  },
+  {
     "kind": "ota",
     "version": "0.2.0",
     "date": "2026-06-20",
