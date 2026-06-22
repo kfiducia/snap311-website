@@ -1,0 +1,53 @@
+name: Update exploration-map snapshot
+
+# Rebuilds active.json from DC's live open-data ArcGIS layer and uploads it to
+# Cloudflare R2. This is an object write, NOT a Pages build — so it never
+# redeploys the site or burns the Pages build quota, even hourly.
+#
+# Served from R2 on the data.snap311.app custom domain; the snap311 app fetches
+# https://data.snap311.app/active.json. DC's data lags days, so hourly is
+# near-real-time, not live (the app says "updated hourly").
+#
+# Uploads via R2's S3-compatible API (AWS CLI, preinstalled on the runner).
+#
+# One-time setup:
+#   - R2 bucket `snap311-data` with a public custom domain → data.snap311.app
+#   - Repo secrets (from the R2 API token you created):
+#       R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_S3_ENDPOINT
+#       (endpoint looks like https://<account-id>.r2.cloudflarestorage.com)
+# The build is stdlib-only Python; active.json is never committed to git.
+
+on:
+  schedule:
+    - cron: '0 * * * *' # top of every hour, UTC
+  workflow_dispatch:
+
+concurrency:
+  group: active-snapshot
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build active.json from live ArcGIS
+        run: |
+          python scripts/build_active.py --arcgis --out active.json
+          ls -la active.json
+
+      - name: Upload to R2 (S3 API)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_S3_ENDPOINT: ${{ secrets.R2_S3_ENDPOINT }}
+        run: |
+          aws s3 cp active.json s3://snap311-data/active.json \
+            --endpoint-url "$R2_S3_ENDPOINT" \
+            --content-type application/json \
+            --cache-control "max-age=600"

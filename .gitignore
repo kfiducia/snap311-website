@@ -22,3 +22,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# exploration-map data is built + uploaded to R2, never committed
+/active.json
