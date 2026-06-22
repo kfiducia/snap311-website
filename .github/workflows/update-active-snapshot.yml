@@ -51,3 +51,19 @@ jobs:
             --endpoint-url "$R2_S3_ENDPOINT" \
             --content-type application/json \
             --cache-control "max-age=600"
+
+      # Static runtime feature flags (e.g. loginEnabled). Committed in this repo
+      # (flags.json) and re-published each run so the file always exists — a
+      # missing flags.json makes the app fetch 404 and fall back to its built-in
+      # defaults. Shorter cache so a flag flip propagates within ~5 min.
+      - name: Upload feature flags to R2 (S3 API)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_S3_ENDPOINT: ${{ secrets.R2_S3_ENDPOINT }}
+        run: |
+          aws s3 cp flags.json s3://snap311-data/flags.json \
+            --endpoint-url "$R2_S3_ENDPOINT" \
+            --content-type application/json \
+            --cache-control "max-age=300"
