@@ -1,5 +1,69 @@
 [
   {
+    "kind": "ota",
+    "version": "0.3.0",
+    "date": "2026-06-23",
+    "changes": [
+      {
+        "type": "Changed",
+        "text": "The Nearby reports map now shows when its data was last refreshed (e.g. \"last updated 8m ago\"), based on when the map data was last rebuilt, making it clearer how recent the reports on screen are."
+      },
+      {
+        "type": "Changed",
+        "text": "The Nearby reports map now refreshes its data on its own once it's more than an hour old (the data is rebuilt hourly), instead of only when you restart the app — so leaving the screen open no longer leaves you looking at stale reports."
+      },
+      {
+        "type": "Fixed",
+        "text": "\"Your info\" now asks for a first name (alongside a last name and an email or phone) — DC 311 requires it, so some reports were failing to submit without it."
+      }
+    ],
+    "bundle": "019ef63e"
+  },
+  {
+    "kind": "ota",
+    "version": "0.3.0",
+    "date": "2026-06-22",
+    "changes": [
+      {
+        "type": "Added",
+        "text": "\"Your info\" now offers DC 311 sign-in to fill your contact details for you — if sign-in is available, the screen leads with a \"Sign in to DC 311\" option that pulls your name/email/phone from your account, so you don't have to type them (you can still enter them manually)."
+      },
+      {
+        "type": "Changed",
+        "text": "After you sign in to DC 311, your past reports now reliably appear in \"My reports\" — the list pulls your account history when you open it and on pull-to-refresh, instead of sometimes showing nothing until much later."
+      },
+      {
+        "type": "Changed",
+        "text": "Nearby reports map now groups busy areas into numbered clusters when you're zoomed out, instead of quietly showing only some of the reports. Tap a cluster (or zoom in) to break it into individual report markers — so nothing is hidden when a lot is happening nearby, and the map stays smooth on large screens."
+      },
+      {
+        "type": "Fixed",
+        "text": "A report you just submitted now shows up in \"My reports\" right away, instead of sometimes not appearing until a later refresh."
+      },
+      {
+        "type": "Fixed",
+        "text": "You can now pull to refresh \"My reports\" from anywhere in the list, not only by pulling down directly on a report."
+      },
+      {
+        "type": "Fixed",
+        "text": "Report forms no longer show \"example\" helper entries as if they were selectable answers (one was even pre-selected). The dockless-vehicle \"vehicle ID\" examples and the bus-stop \"Bus Stop Number\" example now appear as reference images you can look at, instead of answer options you could accidentally pick or submit."
+      },
+      {
+        "type": "Fixed",
+        "text": "Roadway Signs report: the \"traffic sign\" and \"parking sign\" pickers now show the actual sign choices — with pictures of each sign — instead of a single blank, unselectable option that made those reports impossible to submit."
+      },
+      {
+        "type": "Fixed",
+        "text": "Report forms now clear follow-up answers that no longer apply when you change an earlier answer: pick one option, then switch to another that hides those follow-ups, and the stale questions (and their now-irrelevant choices) disappear instead of lingering on screen."
+      },
+      {
+        "type": "Fixed",
+        "text": "The empty \"My reports\" screen can now be pulled to refresh (previously the \"No reports yet\" screen ignored the pull gesture)."
+      }
+    ],
+    "bundle": "019ef253"
+  },
+  {
     "kind": "build",
     "version": "0.3.0",
     "date": "2026-06-21",
