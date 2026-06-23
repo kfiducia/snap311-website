@@ -19,7 +19,13 @@ name: Update exploration-map snapshot
 
 on:
   schedule:
-    - cron: '0 * * * *' # top of every hour, UTC
+    # Every 20 min, offset off :00. GitHub frequently delays or DROPS scheduled
+    # runs — worst at the contended top of the hour — so an "hourly" cron often
+    # lands only every 2-5h in practice. We attempt 3x/hour at off-peak minutes
+    # so a fresh active.json reliably lands roughly hourly even when GitHub skips
+    # some triggers. The job is cheap (~15s, network-bound, stdlib-only), so this
+    # stays well within free Actions minutes.
+    - cron: '7,27,47 * * * *'
   workflow_dispatch:
 
 concurrency:
