@@ -44,6 +44,7 @@ import json
 import re
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -133,10 +134,26 @@ def from_jsonl(path: str):
     return rows, max_date
 
 
-def _get_json(url: str):
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return json.load(r)
+def _get_json(url: str, attempts: int = 5):
+    """GET + parse JSON with retry/backoff. DC's ArcGIS intermittently 503s or
+    times out for cloud (CI) IPs, and the daily sweep makes ~19 calls, so a
+    single transient failure shouldn't sink the whole run."""
+    delay = 3
+    for i in range(attempts):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return json.load(r)
+        except (urllib.error.URLError, TimeoutError) as e:
+            # A genuine client error (4xx other than rate-limit) won't fix
+            # itself — fail fast instead of burning retries.
+            if isinstance(e, urllib.error.HTTPError) and 400 <= e.code < 500 and e.code != 429:
+                raise
+            if i == attempts - 1:
+                raise
+            print(f"  retry {i + 1}/{attempts - 1} after {type(e).__name__}: {e}", file=sys.stderr)
+            time.sleep(delay)
+            delay *= 2
 
 
 def fetch_layer(layer_url: str, where: str):
