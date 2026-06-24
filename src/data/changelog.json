@@ -1,5 +1,56 @@
 [
   {
+    "kind": "build",
+    "version": "0.4.0",
+    "date": "2026-06-23",
+    "changes": [
+      {
+        "type": "Added",
+        "text": "Scan a vehicle ID with your camera (experimental): when reporting a dockless vehicle, tap Scan ID with camera to read the printed ID with on-device OCR instead of typing it. It captures automatically once it locks onto the ID, and in low light it turns on a dim camera light by itself (iOS) so you can read the label at night. Everything stays on your device. Marked Experimental while we refine it."
+      },
+      {
+        "type": "Changed",
+        "text": "Nearby reports map now groups busy areas into numbered clusters when you're zoomed out, instead of quietly showing only some of the reports. Tap a cluster (or zoom in) to break it into individual report markers — so nothing is hidden when a lot is happening nearby, and the map stays smooth on large screens."
+      },
+      {
+        "type": "Fixed",
+        "text": "A report you just submitted now shows up in \"My reports\" right away, instead of sometimes not appearing until a later refresh."
+      },
+      {
+        "type": "Fixed",
+        "text": "You can now pull to refresh \"My reports\" from anywhere in the list, not only by pulling down directly on a report."
+      },
+      {
+        "type": "Fixed",
+        "text": "Opening a report straight from a notification or a shared link and tapping Back now returns you to the home screen instead of doing nothing."
+      }
+    ]
+  },
+  {
+    "kind": "ota",
+    "version": "0.4.0",
+    "date": "2026-06-23",
+    "changes": [
+      {
+        "type": "Changed",
+        "text": "Address entry is clearer: the \"Look up\" button is now \"Validate\", sits beside \"Pin on map\", and grays out once your address is confirmed (the app usually validates it for you, so the button mainly matters when you type an address yourself)."
+      },
+      {
+        "type": "Changed",
+        "text": "On Pin on map, when your pin sits away from the matched address, the \"add the exact pin location to the report\" option is now an obvious, tappable toggle (with a checkbox) instead of looking like plain text."
+      },
+      {
+        "type": "Fixed",
+        "text": "Tapping a report type in the category search now selects it on the first tap — previously, with the keyboard open, the first tap only dismissed the keyboard."
+      },
+      {
+        "type": "Fixed",
+        "text": "Better address detection: when a photo's location, \"use my location\", or a dropped pin lands mid-block (where DC's address lookup returns only a ZIP code), the app now falls back to your phone's built-in geocoder and re-checks that street address against DC's records — so you get a usable address far more often instead of a \"no street address\" dead-end. On the map, the live address shown as you move the pin now reflects this too, so it matches what you'll get when you confirm."
+      }
+    ],
+    "bundle": "019ef704"
+  },
+  {
     "kind": "ota",
     "version": "0.3.0",
     "date": "2026-06-23",
