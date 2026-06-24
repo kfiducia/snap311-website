@@ -243,33 +243,49 @@ def main():
     stale_hidden = 0
     stale_older_than = 0
 
-    if args.jsonl:
-        rows, now_ms = from_jsonl(args.jsonl)
-        source = "jsonl"
-        closed_days = args.closed_days
-    elif args.aging:
-        rows, now_ms = from_arcgis_aging(args.older_than_days)
-        source = "arcgis-aging"
-        closed_days = 0  # open-only; nothing recently-closed in this set
-        # An "open" request added years ago is almost certainly abandoned —
-        # never formally closed in DC's system, not live work. Drop these past a
-        # max age so the map shows a believable backlog, and report how many.
-        if args.max_age_days and args.max_age_days > 0:
-            stale_older_than = args.max_age_days
-            floor = now_ms - args.max_age_days * DAY_MS
-            fresh = []
-            for a in rows:
-                ad = a.get("ADDDATE")
-                if ad is not None and ad < floor:
-                    stale_hidden += 1
-                else:
-                    fresh.append(a)
-            rows = fresh
-            print(f"  hid {stale_hidden} abandoned (>{args.max_age_days}d old)", file=sys.stderr)
-    else:
-        rows, now_ms = from_arcgis(args.closed_days)
-        source = "arcgis"
-        closed_days = args.closed_days
+    try:
+        if args.jsonl:
+            rows, now_ms = from_jsonl(args.jsonl)
+            source = "jsonl"
+            closed_days = args.closed_days
+        elif args.aging:
+            rows, now_ms = from_arcgis_aging(args.older_than_days)
+            source = "arcgis-aging"
+            closed_days = 0  # open-only; nothing recently-closed in this set
+            # An "open" request added years ago is almost certainly abandoned —
+            # never formally closed in DC's system, not live work. Drop these past a
+            # max age so the map shows a believable backlog, and report how many.
+            if args.max_age_days and args.max_age_days > 0:
+                stale_older_than = args.max_age_days
+                floor = now_ms - args.max_age_days * DAY_MS
+                fresh = []
+                for a in rows:
+                    ad = a.get("ADDDATE")
+                    if ad is not None and ad < floor:
+                        stale_hidden += 1
+                    else:
+                        fresh.append(a)
+                rows = fresh
+                print(f"  hid {stale_hidden} abandoned (>{args.max_age_days}d old)", file=sys.stderr)
+        else:
+            rows, now_ms = from_arcgis(args.closed_days)
+            source = "arcgis"
+            closed_days = args.closed_days
+    except (urllib.error.URLError, TimeoutError) as e:
+        # Transient upstream failure (DC's ArcGIS unreachable / 5xx / timeout,
+        # retries already exhausted in _get_json). Exit cleanly WITHOUT writing
+        # output: the cron's upload step is guarded on the file existing, so R2
+        # keeps the last-good snapshot and the run stays green — no false alarm.
+        # Genuine problems still fail loudly: a 4xx (schema/permission) is
+        # re-raised below, and an ArcGIS error payload raises SystemExit upstream
+        # (neither is a URLError/TimeoutError, so neither is swallowed here).
+        if isinstance(e, urllib.error.HTTPError) and 400 <= e.code < 500 and e.code != 429:
+            raise
+        print(
+            f"transient upstream failure, skipping snapshot write: {type(e).__name__}: {e}",
+            file=sys.stderr,
+        )
+        sys.exit(0)
 
     cats, pts = build(rows, now_ms, closed_days)
     out = {
