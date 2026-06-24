@@ -21,7 +21,7 @@
     "group": "request",
     "url": "https://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/ServiceRequests/MapServer/13/query?where=1%3D1&returnCountOnly=true&f=json",
     "method": "GET",
-    "note": "Live 311 map and request data."
+    "note": "Live map plus the full historical service-request archive."
   },
   {
     "id": "dc311-oauth",

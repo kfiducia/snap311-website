@@ -28,6 +28,10 @@ import SiteFooter from "../components/SiteFooter.astro";
 
   <main class="bg-white">
     <div class="mx-auto max-w-4xl px-6 py-12">
+      <!-- Ongoing incidents surface at the very top so a live outage is the
+           first thing you see. -->
+      <div data-status-ongoing></div>
+
       <div data-status-root>
         <p class="text-muted">Loading status…</p>
         <noscript>
@@ -58,12 +62,22 @@ import SiteFooter from "../components/SiteFooter.astro";
     code: number;
     ms: number | null;
     uptime: { d1: number | null; d7: number | null; d90: number | null };
+    lat: { avg: number | null; min: number | null; max: number | null } | null;
   }
   interface DailyRow { day: string; service: string; ups: number; total: number; }
-  interface Incident { service: string; started: number; ended: number | null; last_code: number | null; }
+  interface Incident { service: string; started: number; ended: number | null; last_code: number | null; error: string | null; }
   interface Uptime { generated: number; services: Svc[]; daily: DailyRow[]; incidents: Incident[]; }
 
-  const GROUPS: Record<string, string> = { request: "Request API", data: "Data API" };
+  const GROUPS: Record<string, { label: string; caption: string }> = {
+    request: {
+      label: "DC government services",
+      caption: "Operated by DC — Snap311 depends on these but can't fix their outages.",
+    },
+    data: {
+      label: "Snap311 services",
+      caption: "Operated by Snap311.",
+    },
+  };
 
   const esc = (s: string) =>
     s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
@@ -92,8 +106,15 @@ import SiteFooter from "../components/SiteFooter.astro";
 
   function renderServiceRow(s: Svc, daily: Map<string, Map<string, number>>) {
     const dot = s.up ? "#16a34a" : "#dc2626";
-    const state = s.up ? "Operational" : `Down${s.code ? ` · HTTP ${s.code}` : ""}`;
+    const reason = s.code >= 500 ? `HTTP ${s.code}` : s.code === 0 ? "unreachable" : `HTTP ${s.code}`;
+    const state = s.up ? "Operational" : `Down · ${reason}`;
     const stateColor = s.up ? "text-green-700" : "text-red-700";
+    const latLine = s.up && s.ms != null
+      ? `<div class="text-xs text-muted">${s.ms} ms <span class="text-muted/70">now</span></div>` +
+        (s.lat && s.lat.avg != null
+          ? `<div class="text-[11px] leading-tight text-muted">7d avg ${s.lat.avg} ms · ${s.lat.min}–${s.lat.max}</div>`
+          : "")
+      : "";
 
     // 90-day bar — one cell per day, oldest → newest.
     const byDay = daily.get(s.id) || new Map();
@@ -115,7 +136,10 @@ import SiteFooter from "../components/SiteFooter.astro";
           </div>
           ${s.note ? `<p class="mt-0.5 text-xs text-muted">${esc(s.note)}</p>` : ""}
         </div>
-        <span class="flex-shrink-0 text-sm font-medium ${stateColor}">${esc(state)}</span>
+        <div class="flex-shrink-0 text-right">
+          <div class="text-sm font-medium ${stateColor}">${esc(state)}</div>
+          ${latLine}
+        </div>
       </div>
       <div class="mt-3 flex gap-[2px]">${bars}</div>
       <div class="mt-2 flex justify-between text-xs text-muted">
@@ -157,48 +181,73 @@ import SiteFooter from "../components/SiteFooter.astro";
       </span>`;
     }
 
-    // Service groups.
-    let html = "";
-    for (const [g, label] of Object.entries(GROUPS)) {
+    // Legend — explains the bar colours, and why an amber day can exist without
+    // a logged incident (brief dip vs sustained, confirmed outage).
+    let html = `<div class="mb-8 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl bg-offwhite px-4 py-3 text-xs text-muted ring-1 ring-black/5">
+      <span class="flex items-center gap-1.5"><span class="h-3.5 w-2 rounded-[1px]" style="background:#16a34a"></span>Operational</span>
+      <span class="flex items-center gap-1.5"><span class="h-3.5 w-2 rounded-[1px]" style="background:#d97706"></span>Partial &mdash; brief dip</span>
+      <span class="flex items-center gap-1.5"><span class="h-3.5 w-2 rounded-[1px]" style="background:#dc2626"></span>Down</span>
+      <span class="flex items-center gap-1.5"><span class="h-3.5 w-2 rounded-[1px]" style="background:#e5e7eb"></span>No data</span>
+      <span class="basis-full leading-relaxed text-muted">Each bar is one day's measured availability. A short dip shows as a partial (amber) day; only a <em>sustained</em> outage &mdash; down across consecutive checks &mdash; is logged as an incident below.</span>
+    </div>`;
+    for (const [g, meta] of Object.entries(GROUPS)) {
       const svcs = u.services.filter((s) => s.group === g);
       if (!svcs.length) continue;
-      html += `<h2 class="mt-10 mb-1 text-sm font-bold uppercase tracking-wide text-muted first:mt-0">${label}</h2>
-        <div class="divide-y divide-black/5 rounded-2xl bg-white px-5 ring-1 ring-black/5">
-          ${svcs.map((s) => renderServiceRow(s, daily)).join("")}
+      html += `<div class="mt-10 first:mt-0">
+          <h2 class="text-base font-bold text-navy-deep">${meta.label}</h2>
+          <p class="mb-2 mt-0.5 text-xs text-muted">${meta.caption}</p>
+          <div class="divide-y divide-black/5 rounded-2xl bg-white px-5 ring-1 ring-black/5">
+            ${svcs.map((s) => renderServiceRow(s, daily)).join("")}
+          </div>
         </div>`;
     }
     root.innerHTML = html;
 
-    // Incident log.
+    // Incident log — ongoing first, resolved history below.
     if (incidentsEl) {
-      if (!u.incidents.length) {
-        incidentsEl.innerHTML = `<h2 class="mb-3 text-lg font-bold text-navy-deep">Recent incidents</h2>
-          <p class="text-muted">No incidents recorded yet.</p>`;
-      } else {
-        const rows = u.incidents
-          .map((i) => {
-            const name = nameById.get(i.service) || i.service;
-            const ongoing = i.ended == null;
-            const dur = fmtDur((i.ended ?? Date.now()) - i.started);
-            const when = ongoing
-              ? `Since ${fmtDate(i.started)} · <span class="text-red-700 font-medium">ongoing</span>`
-              : `${fmtDate(i.started)} → ${fmtDate(i.ended!)}`;
-            return `<li class="flex items-start gap-3 py-3">
-              <span class="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full" style="background:${ongoing ? "#dc2626" : "#9ca3af"}"></span>
-              <div>
-                <div class="font-medium text-ink">${esc(name)} ${ongoing ? "unreachable" : "outage"} <span class="text-muted">· ${dur}</span></div>
-                <div class="text-xs text-muted">${when}${i.last_code ? ` · last HTTP ${i.last_code}` : ""}</div>
-              </div>
-            </li>`;
-          })
-          .join("");
-        incidentsEl.innerHTML = `<h2 class="mb-2 text-lg font-bold text-navy-deep">Recent incidents</h2>
-          <ul class="divide-y divide-black/5">${rows}</ul>`;
+      const renderIncident = (i: Incident) => {
+        const name = nameById.get(i.service) || i.service;
+        const ongoing = i.ended == null;
+        const dur = fmtDur((i.ended ?? Date.now()) - i.started);
+        const pill = ongoing
+          ? `<span class="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-red-700">Ongoing</span>`
+          : `<span class="rounded-full bg-black/5 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted">Resolved</span>`;
+        const when = ongoing
+          ? `Down since ${fmtDate(i.started)} · ${dur} so far`
+          : `${fmtDate(i.started)} → ${fmtDate(i.ended!)} · ${dur}`;
+        return `<li class="flex items-start gap-3 py-3">
+          <span class="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full" style="background:${ongoing ? "#dc2626" : "#9ca3af"}"></span>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2"><span class="font-medium text-ink">${esc(name)}</span>${pill}</div>
+            <div class="text-xs text-muted">${when}${i.error ? ` · ${esc(i.error)}` : i.last_code ? ` · HTTP ${i.last_code}` : ""}</div>
+          </div>
+        </li>`;
+      };
+
+      const ongoing = u.incidents.filter((i) => i.ended == null).sort((a, b) => b.started - a.started);
+      const past = u.incidents.filter((i) => i.ended != null).sort((a, b) => b.ended! - a.ended!);
+
+      // Ongoing → prominent card at the top of the page.
+      const ongoingEl = document.querySelector("[data-status-ongoing]");
+      if (ongoingEl) {
+        ongoingEl.innerHTML = ongoing.length
+          ? `<div class="mb-10 rounded-2xl border border-red-200 bg-red-50 p-5">
+               <h2 class="mb-2 text-lg font-bold text-red-800">Ongoing incident${ongoing.length > 1 ? "s" : ""}</h2>
+               <ul class="divide-y divide-red-200/70">${ongoing.map(renderIncident).join("")}</ul>
+             </div>`
+          : "";
       }
+
+      // Resolved history → bottom of the page.
+      incidentsEl.innerHTML =
+        `<h2 class="mb-2 text-lg font-bold text-navy-deep">Past incidents</h2>` +
+        (past.length
+          ? `<ul class="divide-y divide-black/5">${past.map(renderIncident).join("")}</ul>`
+          : `<p class="text-muted">No past incidents recorded.</p>`);
     }
 
     if (checkedEl) {
-      checkedEl.textContent = `Last checked ${fmtDate(u.generated)}. Updates every minute.`;
+      checkedEl.textContent = `Last checked ${fmtDate(u.generated)}.`;
     }
   }
 
