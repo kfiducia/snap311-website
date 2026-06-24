@@ -2,6 +2,18 @@
   {
     "kind": "ota",
     "version": "0.4.0",
+    "date": "2026-06-24",
+    "changes": [
+      {
+        "type": "Changed",
+        "text": "Report-type search now looks at descriptions too: searching for a report type also matches words in each type's description, not just its name and keywords — so you'll find the right one even when you don't know its exact name. Results are ranked, with name matches shown first, then keyword matches, then description matches. When a match isn't in the title, the result shows what hit — the matched keyword, or a snippet of the description in context — and the matched text is highlighted. Thanks to Kyle G for the suggestion."
+      }
+    ],
+    "bundle": "019efaa0"
+  },
+  {
+    "kind": "ota",
+    "version": "0.4.0",
     "date": "2026-06-23",
     "changes": [
       {
