@@ -1,0 +1,94 @@
+---
+// Site-wide service-status banner. Server-renders hidden; JS reveals it only
+// when the heartbeat Worker's status.json reports something down, then it floats
+// at the bottom and links through to /status. Dismissible per outage (a new
+// outage re-shows it).
+---
+
+<div
+  data-status-banner
+  hidden
+  class="fixed inset-x-0 bottom-4 z-50 flex justify-center px-4"
+>
+  <div
+    class="flex items-center gap-3 rounded-xl bg-red-600 py-2.5 pl-4 pr-2.5 text-sm text-white shadow-lg ring-1 ring-black/10"
+  >
+    <span class="relative flex h-2.5 w-2.5 flex-shrink-0" aria-hidden="true">
+      <span
+        class="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/70"
+      ></span>
+      <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-white"></span>
+    </span>
+    <a href="/status" class="flex items-center gap-2 hover:underline underline-offset-2">
+      <span data-status-banner-text class="font-medium">Some services are degraded</span>
+      <span class="font-semibold whitespace-nowrap">View status →</span>
+    </a>
+    <button
+      type="button"
+      data-status-banner-dismiss
+      aria-label="Dismiss"
+      class="ml-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-white/80 transition hover:bg-white/15 hover:text-white"
+    >
+      <span aria-hidden="true" class="text-lg leading-none">×</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  const STATUS_URL = "https://data.snap311.app/status.json";
+  const STATUS_STALE_MIN = 10; // ignore status.json if the checker hasn't run recently
+
+  const banner = document.querySelector<HTMLElement>("[data-status-banner]");
+  const textEl = document.querySelector<HTMLElement>("[data-status-banner-text]");
+  const dismissBtn = document.querySelector<HTMLElement>("[data-status-banner-dismiss]");
+
+  // A signature of the current outage so a dismissed banner re-appears when a
+  // *different* set of services goes down (but stays hidden for the same one).
+  const KEY = "snap311-status-dismissed";
+  let lastSig = "";
+
+  // No point nagging on the status page itself.
+  const onStatusPage = location.pathname.replace(/\/$/, "") === "/status";
+
+  if (banner && textEl && dismissBtn && !onStatusPage) {
+    dismissBtn.addEventListener("click", () => {
+      try { sessionStorage.setItem(KEY, lastSig); } catch {}
+      banner.hidden = true;
+    });
+
+    const check = async () => {
+      try {
+        const res = await fetch(STATUS_URL, { mode: "cors", cache: "no-store" });
+        if (!res.ok) return;
+        const st = await res.json();
+        const stale = !st || (Date.now() - st.checked) / 60000 > STATUS_STALE_MIN;
+        const down: string[] = stale || !Array.isArray(st.down) ? [] : st.down;
+
+        if (!down.length) {
+          banner.hidden = true;
+          return;
+        }
+        lastSig = down.slice().sort().join(",");
+        let dismissed = "";
+        try { dismissed = sessionStorage.getItem(KEY) || ""; } catch {}
+        if (dismissed === lastSig) {
+          banner.hidden = true;
+          return;
+        }
+        const names = down.map((id: string) => st.services?.[id]?.name || id);
+        textEl.textContent =
+          names.length === 1
+            ? `${names[0]} is having issues`
+            : `${names.length} services are having issues`;
+        banner.hidden = false;
+      } catch {
+        /* leave whatever state we're in */
+      }
+    };
+
+    check();
+    setInterval(() => {
+      if (document.visibilityState === "visible") check();
+    }, 60_000);
+  }
+</script>

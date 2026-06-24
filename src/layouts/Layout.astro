@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import StatusBanner from "../components/StatusBanner.astro";
 
 interface Props {
   title?: string;
@@ -49,5 +50,6 @@ const ogImage = "https://snap311.app/img/og.png";
   </head>
   <body>
     <slot />
+    <StatusBanner />
   </body>
 </html>

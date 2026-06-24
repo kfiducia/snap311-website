@@ -1,0 +1,220 @@
+---
+import Layout from "../layouts/Layout.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+---
+
+<Layout
+  title="Status — Snap311"
+  description="Live uptime and incident history for the APIs Snap311 depends on — DC's 311 request API and the snap311 data feeds."
+>
+  <header class="bg-cream">
+    <div class="mx-auto max-w-4xl px-6 py-14 sm:py-20">
+      <a
+        href="/"
+        class="inline-flex items-center gap-1 text-sm font-semibold text-brand underline underline-offset-2 hover:text-navy"
+      >
+        <span aria-hidden="true">←</span> Back to Snap311
+      </a>
+      <h1 class="mt-6 text-4xl font-bold tracking-tight text-navy-deep sm:text-5xl">
+        Status
+      </h1>
+      <p class="mt-4 max-w-2xl text-lg leading-relaxed text-ink/80">
+        Live uptime for the services Snap311 relies on — DC's 311 request API and
+        the snap311 data feeds.
+      </p>
+      <div data-status-overall class="mt-6"></div>
+    </div>
+  </header>
+
+  <main class="bg-white">
+    <div class="mx-auto max-w-4xl px-6 py-12">
+      <div data-status-root>
+        <p class="text-muted">Loading status…</p>
+        <noscript>
+          <p class="text-muted">
+            The live status board needs JavaScript. The raw feed is at
+            <a class="text-brand underline" href="https://data.snap311.app/uptime.json">uptime.json</a>.
+          </p>
+        </noscript>
+      </div>
+
+      <section data-status-incidents class="mt-14"></section>
+
+      <p data-status-checked class="mt-12 text-xs text-muted"></p>
+    </div>
+    <SiteFooter />
+  </main>
+</Layout>
+
+<script>
+  const UPTIME_URL = "https://data.snap311.app/uptime.json";
+
+  interface Svc {
+    id: string;
+    name: string;
+    group: string;
+    note?: string;
+    up: boolean;
+    code: number;
+    ms: number | null;
+    uptime: { d1: number | null; d7: number | null; d90: number | null };
+  }
+  interface DailyRow { day: string; service: string; ups: number; total: number; }
+  interface Incident { service: string; started: number; ended: number | null; last_code: number | null; }
+  interface Uptime { generated: number; services: Svc[]; daily: DailyRow[]; incidents: Incident[]; }
+
+  const GROUPS: Record<string, string> = { request: "Request API", data: "Data API" };
+
+  const esc = (s: string) =>
+    s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
+
+  const fmtPct = (r: number | null) => {
+    if (r == null) return "—";
+    if (r >= 0.99995) return "100%";
+    return `${(r * 100).toFixed(2)}%`;
+  };
+  const barColor = (r: number | null) => {
+    if (r == null) return "#e5e7eb"; // gray-200 — no data
+    if (r >= 0.999) return "#16a34a"; // green
+    if (r >= 0.95) return "#d97706"; // amber
+    return "#dc2626"; // red
+  };
+  const fmtDate = (ms: number) =>
+    new Date(ms).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const fmtDur = (ms: number) => {
+    const m = Math.round(ms / 60000);
+    if (m < 60) return `${m}m`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ${m % 60}m`;
+    return `${Math.floor(h / 24)}d ${h % 24}h`;
+  };
+  const dayKey = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+
+  function renderServiceRow(s: Svc, daily: Map<string, Map<string, number>>) {
+    const dot = s.up ? "#16a34a" : "#dc2626";
+    const state = s.up ? "Operational" : `Down${s.code ? ` · HTTP ${s.code}` : ""}`;
+    const stateColor = s.up ? "text-green-700" : "text-red-700";
+
+    // 90-day bar — one cell per day, oldest → newest.
+    const byDay = daily.get(s.id) || new Map();
+    const now = Date.now();
+    let bars = "";
+    for (let i = 89; i >= 0; i--) {
+      const key = dayKey(now - i * 86400000);
+      const r = byDay.has(key) ? byDay.get(key)! : null;
+      const title = `${key}: ${r == null ? "no data" : fmtPct(r)}`;
+      bars += `<span class="inline-block h-7 flex-1 rounded-[1px]" style="background:${barColor(r)}" title="${title}"></span>`;
+    }
+
+    return `<div class="py-5">
+      <div class="flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="h-2.5 w-2.5 flex-shrink-0 rounded-full" style="background:${dot}"></span>
+            <span class="font-semibold text-ink">${esc(s.name)}</span>
+          </div>
+          ${s.note ? `<p class="mt-0.5 text-xs text-muted">${esc(s.note)}</p>` : ""}
+        </div>
+        <span class="flex-shrink-0 text-sm font-medium ${stateColor}">${esc(state)}</span>
+      </div>
+      <div class="mt-3 flex gap-[2px]">${bars}</div>
+      <div class="mt-2 flex justify-between text-xs text-muted">
+        <span>90 days ago</span>
+        <span class="flex gap-4">
+          <span>24h <b class="text-ink">${fmtPct(s.uptime.d1)}</b></span>
+          <span>7d <b class="text-ink">${fmtPct(s.uptime.d7)}</b></span>
+          <span>90d <b class="text-ink">${fmtPct(s.uptime.d90)}</b></span>
+        </span>
+        <span>today</span>
+      </div>
+    </div>`;
+  }
+
+  function render(u: Uptime) {
+    const root = document.querySelector("[data-status-root]");
+    const overallEl = document.querySelector("[data-status-overall]");
+    const incidentsEl = document.querySelector("[data-status-incidents]");
+    const checkedEl = document.querySelector("[data-status-checked]");
+    if (!root) return;
+
+    // Index daily rows: service → (day → ratio).
+    const daily = new Map<string, Map<string, number>>();
+    for (const d of u.daily) {
+      if (!daily.has(d.service)) daily.set(d.service, new Map());
+      daily.get(d.service)!.set(d.day, d.total > 0 ? d.ups / d.total : 0);
+    }
+    const nameById = new Map(u.services.map((s) => [s.id, s.name]));
+
+    // Overall summary.
+    const down = u.services.filter((s) => !s.up);
+    if (overallEl) {
+      const ok = down.length === 0;
+      overallEl.innerHTML = `<span class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ${
+        ok ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+      }">
+        <span class="h-2.5 w-2.5 rounded-full" style="background:${ok ? "#16a34a" : "#dc2626"}"></span>
+        ${ok ? "All systems operational" : `${down.length} service${down.length > 1 ? "s" : ""} down`}
+      </span>`;
+    }
+
+    // Service groups.
+    let html = "";
+    for (const [g, label] of Object.entries(GROUPS)) {
+      const svcs = u.services.filter((s) => s.group === g);
+      if (!svcs.length) continue;
+      html += `<h2 class="mt-10 mb-1 text-sm font-bold uppercase tracking-wide text-muted first:mt-0">${label}</h2>
+        <div class="divide-y divide-black/5 rounded-2xl bg-white px-5 ring-1 ring-black/5">
+          ${svcs.map((s) => renderServiceRow(s, daily)).join("")}
+        </div>`;
+    }
+    root.innerHTML = html;
+
+    // Incident log.
+    if (incidentsEl) {
+      if (!u.incidents.length) {
+        incidentsEl.innerHTML = `<h2 class="mb-3 text-lg font-bold text-navy-deep">Recent incidents</h2>
+          <p class="text-muted">No incidents recorded yet.</p>`;
+      } else {
+        const rows = u.incidents
+          .map((i) => {
+            const name = nameById.get(i.service) || i.service;
+            const ongoing = i.ended == null;
+            const dur = fmtDur((i.ended ?? Date.now()) - i.started);
+            const when = ongoing
+              ? `Since ${fmtDate(i.started)} · <span class="text-red-700 font-medium">ongoing</span>`
+              : `${fmtDate(i.started)} → ${fmtDate(i.ended!)}`;
+            return `<li class="flex items-start gap-3 py-3">
+              <span class="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full" style="background:${ongoing ? "#dc2626" : "#9ca3af"}"></span>
+              <div>
+                <div class="font-medium text-ink">${esc(name)} ${ongoing ? "unreachable" : "outage"} <span class="text-muted">· ${dur}</span></div>
+                <div class="text-xs text-muted">${when}${i.last_code ? ` · last HTTP ${i.last_code}` : ""}</div>
+              </div>
+            </li>`;
+          })
+          .join("");
+        incidentsEl.innerHTML = `<h2 class="mb-2 text-lg font-bold text-navy-deep">Recent incidents</h2>
+          <ul class="divide-y divide-black/5">${rows}</ul>`;
+      }
+    }
+
+    if (checkedEl) {
+      checkedEl.textContent = `Last checked ${fmtDate(u.generated)}. Updates every minute.`;
+    }
+  }
+
+  async function load() {
+    try {
+      const res = await fetch(UPTIME_URL, { mode: "cors", cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      render(await res.json());
+    } catch {
+      const root = document.querySelector("[data-status-root]");
+      if (root) root.innerHTML = `<p class="text-muted">Couldn't load status right now. Try again shortly.</p>`;
+    }
+  }
+
+  load();
+  setInterval(() => {
+    if (document.visibilityState === "visible") load();
+  }, 60_000);
+</script>
