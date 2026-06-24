@@ -1,0 +1,269 @@
+---
+import Layout from "../layouts/Layout.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+---
+
+<Layout
+  title="Status — Snap311"
+  description="Live uptime and incident history for the APIs Snap311 depends on — DC's 311 request API and the snap311 data feeds."
+>
+  <header class="bg-cream">
+    <div class="mx-auto max-w-4xl px-6 py-14 sm:py-20">
+      <a
+        href="/"
+        class="inline-flex items-center gap-1 text-sm font-semibold text-brand underline underline-offset-2 hover:text-navy"
+      >
+        <span aria-hidden="true">←</span> Back to Snap311
+      </a>
+      <h1 class="mt-6 text-4xl font-bold tracking-tight text-navy-deep sm:text-5xl">
+        Status
+      </h1>
+      <p class="mt-4 max-w-2xl text-lg leading-relaxed text-ink/80">
+        Live uptime for the services Snap311 relies on — DC's 311 request API and
+        the snap311 data feeds.
+      </p>
+      <div data-status-overall class="mt-6"></div>
+    </div>
+  </header>
+
+  <main class="bg-white">
+    <div class="mx-auto max-w-4xl px-6 py-12">
+      <!-- Ongoing incidents surface at the very top so a live outage is the
+           first thing you see. -->
+      <div data-status-ongoing></div>
+
+      <div data-status-root>
+        <p class="text-muted">Loading status…</p>
+        <noscript>
+          <p class="text-muted">
+            The live status board needs JavaScript. The raw feed is at
+            <a class="text-brand underline" href="https://data.snap311.app/uptime.json">uptime.json</a>.
+          </p>
+        </noscript>
+      </div>
+
+      <section data-status-incidents class="mt-14"></section>
+
+      <p data-status-checked class="mt-12 text-xs text-muted"></p>
+    </div>
+    <SiteFooter />
+  </main>
+</Layout>
+
+<script>
+  const UPTIME_URL = "https://data.snap311.app/uptime.json";
+
+  interface Svc {
+    id: string;
+    name: string;
+    group: string;
+    note?: string;
+    up: boolean;
+    code: number;
+    ms: number | null;
+    uptime: { d1: number | null; d7: number | null; d90: number | null };
+    lat: { avg: number | null; min: number | null; max: number | null } | null;
+  }
+  interface DailyRow { day: string; service: string; ups: number; total: number; }
+  interface Incident { service: string; started: number; ended: number | null; last_code: number | null; error: string | null; }
+  interface Uptime { generated: number; services: Svc[]; daily: DailyRow[]; incidents: Incident[]; }
+
+  const GROUPS: Record<string, { label: string; caption: string }> = {
+    request: {
+      label: "DC government services",
+      caption: "Operated by DC — Snap311 depends on these but can't fix their outages.",
+    },
+    data: {
+      label: "Snap311 services",
+      caption: "Operated by Snap311.",
+    },
+  };
+
+  const esc = (s: string) =>
+    s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
+
+  const fmtPct = (r: number | null) => {
+    if (r == null) return "—";
+    if (r >= 0.99995) return "100%";
+    return `${(r * 100).toFixed(2)}%`;
+  };
+  const barColor = (r: number | null) => {
+    if (r == null) return "#e5e7eb"; // gray-200 — no data
+    if (r >= 0.999) return "#16a34a"; // green
+    if (r >= 0.95) return "#d97706"; // amber
+    return "#dc2626"; // red
+  };
+  const fmtDate = (ms: number) =>
+    new Date(ms).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const fmtDur = (ms: number) => {
+    const m = Math.round(ms / 60000);
+    if (m < 60) return `${m}m`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ${m % 60}m`;
+    return `${Math.floor(h / 24)}d ${h % 24}h`;
+  };
+  const dayKey = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+
+  function renderServiceRow(s: Svc, daily: Map<string, Map<string, number>>) {
+    const dot = s.up ? "#16a34a" : "#dc2626";
+    const reason = s.code >= 500 ? `HTTP ${s.code}` : s.code === 0 ? "unreachable" : `HTTP ${s.code}`;
+    const state = s.up ? "Operational" : `Down · ${reason}`;
+    const stateColor = s.up ? "text-green-700" : "text-red-700";
+    const latLine = s.up && s.ms != null
+      ? `<div class="text-xs text-muted">${s.ms} ms <span class="text-muted/70">now</span></div>` +
+        (s.lat && s.lat.avg != null
+          ? `<div class="text-[11px] leading-tight text-muted">7d avg ${s.lat.avg} ms · ${s.lat.min}–${s.lat.max}</div>`
+          : "")
+      : "";
+
+    // 90-day bar — one cell per day, oldest → newest.
+    const byDay = daily.get(s.id) || new Map();
+    const now = Date.now();
+    let bars = "";
+    for (let i = 89; i >= 0; i--) {
+      const key = dayKey(now - i * 86400000);
+      const r = byDay.has(key) ? byDay.get(key)! : null;
+      const title = `${key}: ${r == null ? "no data" : fmtPct(r)}`;
+      bars += `<span class="inline-block h-7 flex-1 rounded-[1px]" style="background:${barColor(r)}" title="${title}"></span>`;
+    }
+
+    return `<div class="py-5">
+      <div class="flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="h-2.5 w-2.5 flex-shrink-0 rounded-full" style="background:${dot}"></span>
+            <span class="font-semibold text-ink">${esc(s.name)}</span>
+          </div>
+          ${s.note ? `<p class="mt-0.5 text-xs text-muted">${esc(s.note)}</p>` : ""}
+        </div>
+        <div class="flex-shrink-0 text-right">
+          <div class="text-sm font-medium ${stateColor}">${esc(state)}</div>
+          ${latLine}
+        </div>
+      </div>
+      <div class="mt-3 flex gap-[2px]">${bars}</div>
+      <div class="mt-2 flex justify-between text-xs text-muted">
+        <span>90 days ago</span>
+        <span class="flex gap-4">
+          <span>24h <b class="text-ink">${fmtPct(s.uptime.d1)}</b></span>
+          <span>7d <b class="text-ink">${fmtPct(s.uptime.d7)}</b></span>
+          <span>90d <b class="text-ink">${fmtPct(s.uptime.d90)}</b></span>
+        </span>
+        <span>today</span>
+      </div>
+    </div>`;
+  }
+
+  function render(u: Uptime) {
+    const root = document.querySelector("[data-status-root]");
+    const overallEl = document.querySelector("[data-status-overall]");
+    const incidentsEl = document.querySelector("[data-status-incidents]");
+    const checkedEl = document.querySelector("[data-status-checked]");
+    if (!root) return;
+
+    // Index daily rows: service → (day → ratio).
+    const daily = new Map<string, Map<string, number>>();
+    for (const d of u.daily) {
+      if (!daily.has(d.service)) daily.set(d.service, new Map());
+      daily.get(d.service)!.set(d.day, d.total > 0 ? d.ups / d.total : 0);
+    }
+    const nameById = new Map(u.services.map((s) => [s.id, s.name]));
+
+    // Overall summary.
+    const down = u.services.filter((s) => !s.up);
+    if (overallEl) {
+      const ok = down.length === 0;
+      overallEl.innerHTML = `<span class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ${
+        ok ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+      }">
+        <span class="h-2.5 w-2.5 rounded-full" style="background:${ok ? "#16a34a" : "#dc2626"}"></span>
+        ${ok ? "All systems operational" : `${down.length} service${down.length > 1 ? "s" : ""} down`}
+      </span>`;
+    }
+
+    // Legend — explains the bar colours, and why an amber day can exist without
+    // a logged incident (brief dip vs sustained, confirmed outage).
+    let html = `<div class="mb-8 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl bg-offwhite px-4 py-3 text-xs text-muted ring-1 ring-black/5">
+      <span class="flex items-center gap-1.5"><span class="h-3.5 w-2 rounded-[1px]" style="background:#16a34a"></span>Operational</span>
+      <span class="flex items-center gap-1.5"><span class="h-3.5 w-2 rounded-[1px]" style="background:#d97706"></span>Partial &mdash; brief dip</span>
+      <span class="flex items-center gap-1.5"><span class="h-3.5 w-2 rounded-[1px]" style="background:#dc2626"></span>Down</span>
+      <span class="flex items-center gap-1.5"><span class="h-3.5 w-2 rounded-[1px]" style="background:#e5e7eb"></span>No data</span>
+      <span class="basis-full leading-relaxed text-muted">Each bar is one day's measured availability. A short dip shows as a partial (amber) day; only a <em>sustained</em> outage &mdash; down across consecutive checks &mdash; is logged as an incident below.</span>
+    </div>`;
+    for (const [g, meta] of Object.entries(GROUPS)) {
+      const svcs = u.services.filter((s) => s.group === g);
+      if (!svcs.length) continue;
+      html += `<div class="mt-10 first:mt-0">
+          <h2 class="text-base font-bold text-navy-deep">${meta.label}</h2>
+          <p class="mb-2 mt-0.5 text-xs text-muted">${meta.caption}</p>
+          <div class="divide-y divide-black/5 rounded-2xl bg-white px-5 ring-1 ring-black/5">
+            ${svcs.map((s) => renderServiceRow(s, daily)).join("")}
+          </div>
+        </div>`;
+    }
+    root.innerHTML = html;
+
+    // Incident log — ongoing first, resolved history below.
+    if (incidentsEl) {
+      const renderIncident = (i: Incident) => {
+        const name = nameById.get(i.service) || i.service;
+        const ongoing = i.ended == null;
+        const dur = fmtDur((i.ended ?? Date.now()) - i.started);
+        const pill = ongoing
+          ? `<span class="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-red-700">Ongoing</span>`
+          : `<span class="rounded-full bg-black/5 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted">Resolved</span>`;
+        const when = ongoing
+          ? `Down since ${fmtDate(i.started)} · ${dur} so far`
+          : `${fmtDate(i.started)} → ${fmtDate(i.ended!)} · ${dur}`;
+        return `<li class="flex items-start gap-3 py-3">
+          <span class="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full" style="background:${ongoing ? "#dc2626" : "#9ca3af"}"></span>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2"><span class="font-medium text-ink">${esc(name)}</span>${pill}</div>
+            <div class="text-xs text-muted">${when}${i.error ? ` · ${esc(i.error)}` : i.last_code ? ` · HTTP ${i.last_code}` : ""}</div>
+          </div>
+        </li>`;
+      };
+
+      const ongoing = u.incidents.filter((i) => i.ended == null).sort((a, b) => b.started - a.started);
+      const past = u.incidents.filter((i) => i.ended != null).sort((a, b) => b.ended! - a.ended!);
+
+      // Ongoing → prominent card at the top of the page.
+      const ongoingEl = document.querySelector("[data-status-ongoing]");
+      if (ongoingEl) {
+        ongoingEl.innerHTML = ongoing.length
+          ? `<div class="mb-10 rounded-2xl border border-red-200 bg-red-50 p-5">
+               <h2 class="mb-2 text-lg font-bold text-red-800">Ongoing incident${ongoing.length > 1 ? "s" : ""}</h2>
+               <ul class="divide-y divide-red-200/70">${ongoing.map(renderIncident).join("")}</ul>
+             </div>`
+          : "";
+      }
+
+      // Resolved history → bottom of the page.
+      incidentsEl.innerHTML =
+        `<h2 class="mb-2 text-lg font-bold text-navy-deep">Past incidents</h2>` +
+        (past.length
+          ? `<ul class="divide-y divide-black/5">${past.map(renderIncident).join("")}</ul>`
+          : `<p class="text-muted">No past incidents recorded.</p>`);
+    }
+
+    if (checkedEl) {
+      checkedEl.textContent = `Last checked ${fmtDate(u.generated)}.`;
+    }
+  }
+
+  async function load() {
+    try {
+      const res = await fetch(UPTIME_URL, { mode: "cors", cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      render(await res.json());
+    } catch {
+      const root = document.querySelector("[data-status-root]");
+      if (root) root.innerHTML = `<p class="text-muted">Couldn't load status right now. Try again shortly.</p>`;
+    }
+  }
+
+  load();
+  setInterval(() => {
+    if (document.visibilityState === "visible") load();
+  }, 60_000);
+</script>

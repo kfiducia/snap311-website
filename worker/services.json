@@ -1,0 +1,58 @@
+[
+  {
+    "id": "dc311-proxy",
+    "name": "DC 311 requests",
+    "group": "request",
+    "url": "https://dc311-api.herokuapp.com/311/v4/services.json",
+    "method": "GET",
+    "note": "Submitting and looking up 311 requests."
+  },
+  {
+    "id": "dc311-photo",
+    "name": "Media uploads",
+    "group": "request",
+    "url": "https://dc311-api-worker.herokuapp.com/",
+    "method": "GET",
+    "note": "Media uploading."
+  },
+  {
+    "id": "dc-arcgis",
+    "name": "DC map data",
+    "group": "request",
+    "url": "https://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/ServiceRequests/MapServer/13/query?where=1%3D1&returnCountOnly=true&f=json",
+    "method": "GET",
+    "note": "Live map plus the full historical service-request archive."
+  },
+  {
+    "id": "dc311-oauth",
+    "name": "DC 311 sign-in",
+    "group": "request",
+    "url": "https://311.dc.gov/citizen/services/oauth2/authorize",
+    "method": "GET",
+    "note": "Signing in to a DC 311 account."
+  },
+  {
+    "id": "data-active",
+    "name": "Live map feed",
+    "group": "data",
+    "url": "https://data.snap311.app/active.json",
+    "method": "HEAD",
+    "note": "Recent open requests."
+  },
+  {
+    "id": "data-aging",
+    "name": "History feed",
+    "group": "data",
+    "url": "https://data.snap311.app/aging.json",
+    "method": "HEAD",
+    "note": "Older open requests."
+  },
+  {
+    "id": "data-flags",
+    "name": "App config",
+    "group": "data",
+    "url": "https://data.snap311.app/flags.json",
+    "method": "HEAD",
+    "note": "App configuration."
+  }
+]

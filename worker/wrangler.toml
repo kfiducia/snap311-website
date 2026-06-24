@@ -1,0 +1,35 @@
+# Cloudflare Worker: snap311 status heartbeat.
+#
+# Runs every minute, pings DC's ArcGIS API + HEADs the R2 data endpoints, and
+# writes status.json into the same R2 bucket the data is served from. The
+# website's live-status badge reads data.snap311.app/status.json.
+#
+# Why a Worker (not GitHub Actions): GH cron is 5-min minimum and frequently
+# delayed/dropped; this needs a reliable 1-minute heartbeat. Cloudflare Cron
+# Triggers do native 1-minute, the Worker binds straight to R2 (no S3 creds),
+# and it fetches ArcGIS server-side so there's no browser CORS problem.
+#
+# Deploy:
+#   cd worker
+#   npx wrangler deploy           # needs CLOUDFLARE_API_TOKEN (+ account id)
+# The R2 bucket must already exist (snap311-data) — it does; it serves the data.
+
+name = "snap311-status"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# Bind the existing public data bucket so the Worker can PUT status.json / uptime.json.
+[[r2_buckets]]
+binding = "DATA"
+bucket_name = "snap311-data"
+
+# Uptime history. Create once with `npx wrangler d1 create snap311-status`,
+# then paste the returned database_id here and apply schema.sql.
+[[d1_databases]]
+binding = "DB"
+database_name = "snap311-status"
+database_id = "aba0e279-3ccd-45f5-b616-f95e41e1d29c"
+
+# Every minute.
+[triggers]
+crons = ["* * * * *"]
