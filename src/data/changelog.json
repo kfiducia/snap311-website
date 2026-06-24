@@ -1,5 +1,29 @@
 [
   {
+    "kind": "ota",
+    "version": "0.4.0",
+    "date": "2026-06-23",
+    "changes": [
+      {
+        "type": "Changed",
+        "text": "Address entry is clearer: the \"Look up\" button is now \"Validate\", sits beside \"Pin on map\", and grays out once your address is confirmed (the app usually validates it for you, so the button mainly matters when you type an address yourself)."
+      },
+      {
+        "type": "Changed",
+        "text": "On Pin on map, when your pin sits away from the matched address, the \"add the exact pin location to the report\" option is now an obvious, tappable toggle (with a checkbox) instead of looking like plain text."
+      },
+      {
+        "type": "Fixed",
+        "text": "Tapping a report type in the category search now selects it on the first tap — previously, with the keyboard open, the first tap only dismissed the keyboard."
+      },
+      {
+        "type": "Fixed",
+        "text": "Better address detection: when a photo's location, \"use my location\", or a dropped pin lands mid-block (where DC's address lookup returns only a ZIP code), the app now falls back to your phone's built-in geocoder and re-checks that street address against DC's records — so you get a usable address far more often instead of a \"no street address\" dead-end. On the map, the live address shown as you move the pin now reflects this too, so it matches what you'll get when you confirm."
+      }
+    ],
+    "bundle": "019ef704"
+  },
+  {
     "kind": "build",
     "version": "0.4.0",
     "date": "2026-06-23",
@@ -25,30 +49,6 @@
         "text": "Opening a report straight from a notification or a shared link and tapping Back now returns you to the home screen instead of doing nothing."
       }
     ]
-  },
-  {
-    "kind": "ota",
-    "version": "0.4.0",
-    "date": "2026-06-23",
-    "changes": [
-      {
-        "type": "Changed",
-        "text": "Address entry is clearer: the \"Look up\" button is now \"Validate\", sits beside \"Pin on map\", and grays out once your address is confirmed (the app usually validates it for you, so the button mainly matters when you type an address yourself)."
-      },
-      {
-        "type": "Changed",
-        "text": "On Pin on map, when your pin sits away from the matched address, the \"add the exact pin location to the report\" option is now an obvious, tappable toggle (with a checkbox) instead of looking like plain text."
-      },
-      {
-        "type": "Fixed",
-        "text": "Tapping a report type in the category search now selects it on the first tap — previously, with the keyboard open, the first tap only dismissed the keyboard."
-      },
-      {
-        "type": "Fixed",
-        "text": "Better address detection: when a photo's location, \"use my location\", or a dropped pin lands mid-block (where DC's address lookup returns only a ZIP code), the app now falls back to your phone's built-in geocoder and re-checks that street address against DC's records — so you get a usable address far more often instead of a \"no street address\" dead-end. On the map, the live address shown as you move the pin now reflects this too, so it matches what you'll get when you confirm."
-      }
-    ],
-    "bundle": "019ef704"
   },
   {
     "kind": "ota",
@@ -221,23 +221,6 @@
     ]
   },
   {
-    "kind": "build",
-    "version": "0.2.0",
-    "date": "2026-06-19",
-    "changes": [
-      {
-        "type": "Fixed",
-        "text": "Android: opening \"Pin on map\" no longer crashes the app. Earlier Android builds shipped without the Google Maps key, so tapping into the map closed the app instantly; the map now loads normally. (iOS was unaffected.)"
-      }
-    ],
-    "builds": [
-      {
-        "label": "Android",
-        "number": "3"
-      }
-    ]
-  },
-  {
     "kind": "ota",
     "version": "0.2.0",
     "date": "2026-06-19",
@@ -303,6 +286,23 @@
         "label": "iOS",
         "number": "9"
       },
+      {
+        "label": "Android",
+        "number": "3"
+      }
+    ]
+  },
+  {
+    "kind": "build",
+    "version": "0.2.0",
+    "date": "2026-06-19",
+    "changes": [
+      {
+        "type": "Fixed",
+        "text": "Android: opening \"Pin on map\" no longer crashes the app. Earlier Android builds shipped without the Google Maps key, so tapping into the map closed the app instantly; the map now loads normally. (iOS was unaffected.)"
+      }
+    ],
+    "builds": [
       {
         "label": "Android",
         "number": "3"
