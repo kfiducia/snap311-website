@@ -218,7 +218,17 @@ for (const e of kept) {
 // signal than any kind-based assumption (a same-day native rebuild can ship
 // after that day's OTAs, which the old "OTA always before build" rule got
 // wrong). Array.sort is stable, so returning 0 keeps document order.
-kept.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+//
+// Exception: an OTA to a version always ships AFTER that version's own build, so
+// within ONE version a same-day OTA outranks the build (the build's changes are
+// authored above its OTA cards, so document order alone would wrongly put the
+// build on top). This is scoped to same version + same date, so it can't reorder
+// a same-day native rebuild of a *different* version (handled by the rule above).
+kept.sort((a, b) => {
+  if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+  if (a.version === b.version && a.kind !== b.kind) return a.kind === "ota" ? -1 : 1;
+  return 0;
+});
 
 if (!kept.length) {
   console.error(
