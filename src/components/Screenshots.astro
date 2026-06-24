@@ -1,20 +1,26 @@
 ---
-// Ordered for a natural narrative: start → file → track.
+// Ordered for a natural narrative: start → file → discover → track.
 const shots = [
   {
-    base: "/img/screenshots/shot-1",
+    base: "/img/screenshots/home",
     alt: "Snap311 home screen showing the snap-a-photo button and common DC 311 categories",
     caption: "Start in one tap — snap a photo or pick a category.",
   },
   {
-    base: "/img/screenshots/shot-3",
-    alt: "Snap311 new report screen with address lookup, map pin, and guided questions",
-    caption: "Guided forms with address lookup and a map pin picker.",
+    base: "/img/screenshots/report-form",
+    alt: "Snap311 new report screen with address lookup, a map pin, and guided questions",
+    caption:
+      "Guided forms with address lookup, a smart map pin, and only the questions your report needs.",
   },
   {
-    base: "/img/screenshots/shot-2",
-    alt: "Snap311 My reports screen listing a submitted report and its status",
-    caption: "Track past reports, and add ones filed elsewhere by SR number.",
+    base: "/img/screenshots/nearby",
+    alt: "Snap311 nearby reports map showing open and overdue 311 issues around you",
+    caption: "See what's already reported nearby — and what's overdue — before you file.",
+  },
+  {
+    base: "/img/screenshots/my-reports",
+    alt: "Snap311 My reports screen listing submitted reports with status and expected dates",
+    caption: "Track every report's status, department, and expected date.",
   },
 ];
 ---
@@ -29,7 +35,7 @@ const shots = [
     </h2>
 
     <div
-      class="mt-12 flex snap-x snap-mandatory gap-6 overflow-x-auto pb-4 sm:grid sm:grid-cols-3 sm:gap-8 sm:overflow-visible"
+      class="mt-12 flex snap-x snap-mandatory gap-6 overflow-x-auto pb-4 sm:grid sm:grid-cols-2 sm:gap-8 sm:overflow-visible lg:grid-cols-4"
     >
       {
         shots.map((shot, i) => (
@@ -39,7 +45,7 @@ const shots = [
                 <source
                   type="image/webp"
                   srcset={`${shot.base}-440.webp 440w, ${shot.base}-660.webp 660w, ${shot.base}-880.webp 880w, ${shot.base}-1320.webp 1320w`}
-                  sizes="(min-width: 640px) 30vw, 78vw"
+                  sizes="(min-width: 1024px) 22vw, (min-width: 640px) 45vw, 78vw"
                 />
                 <img
                   src={`${shot.base}-660.png`}

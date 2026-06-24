@@ -1,43 +1,96 @@
 ---
-const features = [
-  "Camera-first photo-to-submit — fewer taps, less hassle",
-  "Offline drafts that auto-retry when you reconnect",
-  "Map pin picker for when photos lack GPS",
-  "Track past reports and get notified when DC closes them",
-  "Add reports filed by other methods (web, phone) by SR number",
-  "No accounts, no ads, no tracking",
+// Framed as the difference vs. the official DC 311 app: same backend,
+// faster flow, fewer steps, built to not fall over, and extras it lacks.
+const groups = [
+  {
+    emoji: "⚡",
+    title: "Faster, with fewer taps",
+    items: [
+      "Camera-first — snap a photo and the location fills itself in; attach up to 5",
+      "Forms open instantly from cache — no stalling on strained cellular",
+      "Guided forms ask only the questions your report type actually needs",
+      "Save the categories you report most as Favorites for quick access",
+    ],
+  },
+  {
+    emoji: "🛡️",
+    title: "Built so nothing gets lost",
+    items: [
+      "Drafts save and auto-send when you're back online or DC 311 recovers",
+      "Honest banners when DC 311 is down — not an endless spinner",
+      "Requests time out gracefully and retry on their own",
+      "Photos keep uploading in the background, even if your signal drops",
+    ],
+  },
+  {
+    emoji: "🔎",
+    title: "Goes further than the official app",
+    items: [
+      "See what's already reported nearby on a live map — and skip filing a duplicate",
+      "Track every report: live status, handling department, expected dates, full timeline",
+      "Export or share any report, or re-file a recurring issue in a couple of taps",
+      "Add reports you filed by phone or web by SR number",
+    ],
+  },
+  {
+    emoji: "🙂",
+    title: "On your side",
+    items: [
+      "No Snap311 account or servers — reports go straight to DC 311, your info stays on your device",
+      "No ads, no tracking",
+      "Earn civic points, streaks, and achievements as you help fix the city",
+      "Free, and built by a DC neighbor — not a contractor",
+    ],
+  },
 ];
 ---
 
 <section class="bg-white py-16 sm:py-20" aria-labelledby="features-heading">
-  <div class="mx-auto max-w-3xl px-6">
+  <div class="mx-auto max-w-4xl px-6">
     <h2
       id="features-heading"
-      class="text-3xl font-bold tracking-tight text-navy-deep sm:text-4xl"
+      class="text-center text-3xl font-bold tracking-tight text-navy-deep sm:text-4xl"
     >
-      Everything in the box
+      How it's better than the official app
     </h2>
+    <p class="mx-auto mt-4 max-w-2xl text-center text-lg leading-relaxed text-muted">
+      Snap311 files into the same DC 311 system — it just gets you there
+      faster, goes further once you're done, and doesn't fall over when you
+      need it.
+    </p>
 
-    <ul class="mt-8 grid gap-4 sm:grid-cols-2">
+    <div class="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2">
       {
-        features.map((feature) => (
-          <li class="flex items-start gap-3 text-lg leading-relaxed text-ink">
-            <svg
-              class="mt-1 h-5 w-5 flex-shrink-0 text-navy"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.5 7.6a1 1 0 0 1-1.427 0l-3.5-3.55a1 1 0 1 1 1.422-1.406l2.787 2.826 6.788-6.878a1 1 0 0 1 1.414-.006z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            <span>{feature}</span>
-          </li>
+        groups.map((group) => (
+          <div>
+            <h3 class="flex items-center gap-2 text-xl font-bold text-navy-deep">
+              <span class="text-2xl" aria-hidden="true">
+                {group.emoji}
+              </span>
+              {group.title}
+            </h3>
+            <ul class="mt-4 space-y-3">
+              {group.items.map((item) => (
+                <li class="flex items-start gap-3 leading-relaxed text-ink">
+                  <svg
+                    class="mt-1 h-5 w-5 flex-shrink-0 text-navy"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.5 7.6a1 1 0 0 1-1.427 0l-3.5-3.55a1 1 0 1 1 1.422-1.406l2.787 2.826 6.788-6.878a1 1 0 0 1 1.414-.006z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         ))
       }
-    </ul>
+    </div>
   </div>
 </section>

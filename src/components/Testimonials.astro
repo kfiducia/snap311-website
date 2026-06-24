@@ -1,0 +1,53 @@
+---
+// Real beta feedback, scrubbed of names and language.
+// `who` is an anonymized attribution — swap in real first names/initials
+// if you have the tester's permission.
+const testimonials = [
+  {
+    quote:
+      "Just used this for submitting a ticket, and it was so much easier than the 311 website.",
+    who: "DC resident, beta tester",
+  },
+  {
+    quote:
+      "The gamifying is amazing — I wish it didn't give me a dopamine rush, but it does.",
+    who: "Beta tester",
+  },
+];
+---
+
+<section class="bg-cream py-16 sm:py-20" aria-labelledby="praise-heading">
+  <div class="mx-auto max-w-4xl px-6">
+    <h2
+      id="praise-heading"
+      class="text-center text-3xl font-bold tracking-tight text-navy-deep sm:text-4xl"
+    >
+      What early testers are saying
+    </h2>
+
+    <div class="mt-12 grid gap-6 sm:grid-cols-2">
+      {
+        testimonials.map((t) => (
+          <figure class="flex h-full flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-black/5">
+            <svg
+              class="h-8 w-8 flex-shrink-0 text-navy/15"
+              viewBox="0 0 32 32"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M9.4 8C6 8 3.3 10.8 3.3 14.2c0 3.3 2.5 5.8 5.6 5.8.3 0 .7 0 1-.1-.6 2-2.3 3.6-4.6 4.3l1 2.8c4.3-1.2 7.5-5 7.5-9.9V14C13.8 10.6 12 8 9.4 8zm14 0c-3.4 0-6.1 2.8-6.1 6.2 0 3.3 2.5 5.8 5.6 5.8.3 0 .7 0 1-.1-.6 2-2.3 3.6-4.6 4.3l1 2.8c4.3-1.2 7.5-5 7.5-9.9V14C27.8 10.6 26 8 23.4 8z" />
+            </svg>
+
+            <blockquote class="mt-4 flex-1 text-lg leading-relaxed text-ink">
+              <p>{t.quote}</p>
+            </blockquote>
+
+            <figcaption class="mt-6 text-sm font-semibold text-navy">
+              {t.who}
+            </figcaption>
+          </figure>
+        ))
+      }
+    </div>
+  </div>
+</section>

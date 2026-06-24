@@ -1,0 +1,380 @@
+---
+// Live preview of DC 311 activity — the same open-requests snapshot the app's
+// "Nearby reports" map uses (data.snap311.app/active.json, rebuilt hourly).
+// Fetched client-side and lazy-initialised on scroll so it never weighs down
+// the initial page load. Degrades gracefully (section hides) if the feed is
+// unreachable.
+---
+
+<section
+  class="bg-offwhite py-16 sm:py-20"
+  aria-labelledby="live-heading"
+  data-recent-reports
+>
+  <div class="mx-auto max-w-6xl px-6">
+    <h2
+      id="live-heading"
+      class="text-center text-3xl font-bold tracking-tight text-navy-deep sm:text-4xl"
+    >
+      DC 311, right now
+    </h2>
+    <p class="mx-auto mt-4 max-w-2xl text-center text-lg leading-relaxed text-muted">
+      Open 311 requests across DC, live — a preview of the fuller map in the
+      app.
+    </p>
+
+    <div class="mt-10 grid gap-8 lg:grid-cols-5">
+      <!-- Map -->
+      <div class="lg:col-span-3">
+        <div
+          id="rr-map"
+          class="h-[380px] w-full overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5 sm:h-[440px]"
+          role="img"
+          aria-label="Map of open DC 311 service requests across the city"
+        >
+          <div class="h-full w-full animate-pulse bg-black/5"></div>
+        </div>
+        <div
+          class="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm text-muted"
+        >
+          <span class="flex items-center gap-4">
+            <span class="flex items-center gap-1.5">
+              <span class="h-2.5 w-2.5 rounded-full" style="background:#034670"
+              ></span>Open
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="h-2.5 w-2.5 rounded-full" style="background:#d97706"
+              ></span>In progress
+            </span>
+          </span>
+          <span data-rr-count></span>
+        </div>
+      </div>
+
+      <!-- Live feed -->
+      <div class="lg:col-span-2">
+        <div class="flex items-center gap-3">
+          <span class="relative flex h-2.5 w-2.5" aria-hidden="true">
+            <span
+              class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand/60"
+            ></span>
+            <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-brand"
+            ></span>
+          </span>
+          <div
+            role="tablist"
+            aria-label="DC 311 report feed"
+            class="flex gap-1 rounded-full bg-black/5 p-1 text-sm font-semibold"
+          >
+            <button
+              type="button"
+              role="tab"
+              data-rr-tab="recent"
+              aria-selected="true"
+              class="rounded-full px-3 py-1 text-muted transition aria-selected:bg-white aria-selected:text-navy-deep aria-selected:shadow-sm"
+            >
+              Recently reported
+            </button>
+            <button
+              type="button"
+              role="tab"
+              data-rr-tab="oldest"
+              aria-selected="false"
+              class="rounded-full px-3 py-1 text-muted transition aria-selected:bg-white aria-selected:text-navy-deep aria-selected:shadow-sm"
+            >
+              Oldest open
+            </button>
+          </div>
+        </div>
+        <ul
+          data-rr-feed
+          class="mt-4 divide-y divide-black/5 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5"
+        >
+          {
+            Array.from({ length: 6 }).map(() => (
+              <li class="flex items-center gap-3 px-4 py-3">
+                <span class="h-2 w-2 flex-shrink-0 rounded-full bg-black/10" />
+                <span class="h-3 flex-1 animate-pulse rounded bg-black/5" />
+              </li>
+            ))
+          }
+        </ul>
+        <p class="mt-3 text-xs text-muted" data-rr-updated></p>
+        <noscript>
+          <p class="mt-3 text-xs text-muted">
+            This live map needs JavaScript — explore DC 311 activity in the
+            Snap311 app.
+          </p>
+        </noscript>
+      </div>
+    </div>
+
+    <p class="mt-8 text-center">
+      <a
+        href="#get-the-app"
+        class="inline-flex items-center gap-1 font-semibold text-brand underline underline-offset-2 hover:text-navy"
+      >
+        See what's near you in the app
+        <span aria-hidden="true">→</span>
+      </a>
+    </p>
+  </div>
+</section>
+
+<script>
+  import L from "leaflet";
+  import "leaflet/dist/leaflet.css";
+
+  const DATA_URL = "https://data.snap311.app/active.json";
+
+  // Compact wire format: pt = [id, lat, lng, code, catIdx, opened, resolved, due]
+  // code: 0 = open, 1 = in-progress, 2 = closed (recently)
+  type Pt = [
+    string,
+    number,
+    number,
+    number,
+    number,
+    number | null,
+    number | null,
+    number | null,
+  ];
+  interface Snapshot {
+    generated: number;
+    cats: string[];
+    pts: Pt[];
+  }
+
+  // Shared across renders so the feed can drive the map.
+  let map: L.Map | null = null;
+  let highlight: L.CircleMarker | null = null;
+  let activeRow: HTMLElement | null = null;
+
+  const section = document.querySelector<HTMLElement>("[data-recent-reports]");
+  if (section) {
+    // Only fetch + render once the section is about to enter the viewport.
+    const io = new IntersectionObserver(
+      (entries, obs) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            obs.disconnect();
+            init(section);
+          }
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    io.observe(section);
+  }
+
+  // DC quadrants radiate from the Capitol.
+  const CAP_LAT = 38.8899;
+  const CAP_LNG = -77.0091;
+  function quadrant(lat: number, lng: number): string {
+    return (lat >= CAP_LAT ? "N" : "S") + (lng >= CAP_LNG ? "E" : "W");
+  }
+
+  function ago(ms: number, now: number): string {
+    const s = Math.max(0, (now - ms) / 1000);
+    if (s < 90) return "just now";
+    const m = Math.round(s / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.round(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.round(h / 24)}d ago`;
+  }
+
+  function fmtCount(n: number): string {
+    return n.toLocaleString("en-US");
+  }
+
+  async function init(section: HTMLElement) {
+    let snap: Snapshot;
+    try {
+      const res = await fetch(DATA_URL, { mode: "cors" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      snap = (await res.json()) as Snapshot;
+    } catch {
+      // Feed unreachable — collapse the section rather than show empty skeletons.
+      section.hidden = true;
+      return;
+    }
+
+    const { pts, cats } = snap;
+    if (!Array.isArray(pts) || !pts.length) {
+      section.hidden = true;
+      return;
+    }
+
+    renderMap(pts);
+    renderFeed(section, pts, cats, snap.generated);
+    renderMeta(section, pts, snap.generated);
+  }
+
+  function renderMap(pts: Pt[]) {
+    const el = document.getElementById("rr-map");
+    if (!el) return;
+    el.innerHTML = ""; // clear loading skeleton before Leaflet takes the container
+
+    const bounds = L.latLngBounds([
+      [38.79, -77.125],
+      [39.0, -76.9],
+    ]);
+
+    map = L.map(el, {
+      preferCanvas: true,
+      scrollWheelZoom: false,
+      zoomControl: true,
+      minZoom: 10,
+      maxZoom: 18,
+      maxBounds: bounds.pad(0.25),
+    }).fitBounds(bounds);
+
+    L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+      {
+        subdomains: "abcd",
+        maxZoom: 19,
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      },
+    ).addTo(map);
+
+    const renderer = L.canvas({ padding: 0.5 });
+    const color: Record<number, string> = { 0: "#034670", 1: "#d97706" };
+    const layer = L.featureGroup();
+    for (const p of pts) {
+      if (p[3] === 2) continue; // skip recently-closed on the map
+      L.circleMarker([p[1], p[2]], {
+        renderer,
+        radius: 2.4,
+        stroke: false,
+        fillColor: color[p[3]] ?? "#034670",
+        fillOpacity: 0.6,
+        interactive: false,
+      }).addTo(layer);
+    }
+    layer.addTo(map);
+  }
+
+  function renderFeed(
+    section: HTMLElement,
+    pts: Pt[],
+    cats: string[],
+    generated: number,
+  ) {
+    const ul = section.querySelector<HTMLElement>("[data-rr-feed]");
+    if (!ul) return;
+
+    // Open only — drop recently-closed (code 2).
+    const open = pts.filter((p) => p[3] !== 2 && p[5] != null);
+    const lists: Record<string, Pt[]> = {
+      recent: [...open]
+        .sort((a, b) => (b[5] as number) - (a[5] as number))
+        .slice(0, 12),
+      oldest: [...open]
+        .sort((a, b) => (a[5] as number) - (b[5] as number))
+        .slice(0, 12),
+    };
+
+    const dot: Record<number, string> = { 0: "#034670", 1: "#d97706" };
+
+    const row = (p: Pt) => {
+      const cat = cats[p[4]] ?? "Service request";
+      const q = quadrant(p[1], p[2]);
+      const when = ago(p[5] as number, generated);
+      const c = dot[p[3]] ?? "#034670";
+      return `<li>
+        <button type="button" data-lat="${p[1]}" data-lng="${p[2]}"
+          class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-black/[0.03]"
+          aria-label="Show ${escapeHtml(cat)} on the map">
+          <span class="h-2 w-2 flex-shrink-0 rounded-full" style="background:${c}"></span>
+          <span class="min-w-0 flex-1 truncate text-sm font-medium text-ink">${escapeHtml(cat)}</span>
+          <span class="flex-shrink-0 text-xs text-muted">${q} · ${when}</span>
+        </button>
+      </li>`;
+    };
+
+    const render = (key: string) => {
+      ul.innerHTML = (lists[key] ?? lists.recent).map(row).join("");
+      activeRow = null;
+    };
+    render("recent");
+
+    // Tab switching (Recently reported / Oldest open).
+    const tabs = Array.from(
+      section.querySelectorAll<HTMLElement>("[data-rr-tab]"),
+    );
+    for (const btn of tabs) {
+      btn.addEventListener("click", () => {
+        for (const b of tabs)
+          b.setAttribute("aria-selected", String(b === btn));
+        render(btn.getAttribute("data-rr-tab") || "recent");
+      });
+    }
+
+    // Click a row → fly the map to it (delegation survives tab re-renders).
+    ul.addEventListener("click", (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>("[data-lat]");
+      if (!btn) return;
+      const lat = parseFloat(btn.dataset.lat || "");
+      const lng = parseFloat(btn.dataset.lng || "");
+      if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+      focusPoint(lat, lng);
+      if (activeRow) activeRow.style.background = "";
+      activeRow = btn;
+      btn.style.background = "rgba(11,61,145,0.06)";
+    });
+  }
+
+  // Fly the map to a report and mark it with a highlight ring.
+  function focusPoint(lat: number, lng: number) {
+    if (!map) return;
+    map.flyTo([lat, lng], 16, { duration: 0.6 });
+    if (!highlight) {
+      highlight = L.circleMarker([lat, lng], {
+        radius: 9,
+        color: "#0b3d91",
+        weight: 3,
+        fillColor: "#0b3d91",
+        fillOpacity: 0.2,
+        interactive: false,
+      }).addTo(map);
+    } else {
+      highlight.setLatLng([lat, lng]);
+      if (!map.hasLayer(highlight)) highlight.addTo(map);
+    }
+    // On stacked (mobile) layouts the map sits above the feed — bring it back.
+    if (window.innerWidth < 1024) {
+      document
+        .getElementById("rr-map")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
+
+  function renderMeta(section: HTMLElement, pts: Pt[], generated: number) {
+    const open = pts.reduce((n, p) => (p[3] !== 2 ? n + 1 : n), 0);
+
+    const countEl = section.querySelector<HTMLElement>("[data-rr-count]");
+    if (countEl)
+      countEl.textContent = `${fmtCount(open)} open requests across DC`;
+
+    const updEl = section.querySelector<HTMLElement>("[data-rr-updated]");
+    if (updEl)
+      updEl.textContent = `Live from DC 311 · updated ${ago(generated, Date.now())} · refreshes hourly`;
+  }
+
+  function escapeHtml(s: string): string {
+    return s.replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c] as string,
+    );
+  }
+</script>
