@@ -7,6 +7,7 @@ import {
   ANDROID_LIVE,
   BMC_URL,
 } from "../data/links";
+import { Icon } from "astro-icon/components";
 ---
 
 <header
@@ -84,6 +85,7 @@ import {
             class="inline-flex h-[54px] w-full cursor-default items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 font-semibold text-white/70 sm:w-auto"
             title="The App Store listing goes live once Apple approves the v1.0 review (submitted June 17, 2026)."
           >
+            <Icon name="simple-icons:appstore" class="h-5 w-5" aria-hidden="true" />
             App Store — coming soon
           </span>
         )
@@ -98,6 +100,7 @@ import {
             rel="noopener"
             class="inline-flex h-[54px] w-full items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 font-semibold text-white backdrop-blur transition hover:bg-white/20 sm:w-auto"
           >
+            <Icon name="simple-icons:apple" class="h-5 w-5" aria-hidden="true" />
             Join the TestFlight beta
           </a>
         ) : (
@@ -105,6 +108,7 @@ import {
             class="inline-flex h-[54px] w-full cursor-default items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 font-semibold text-white/70 sm:w-auto"
             title="The public TestFlight link goes live once Beta App Review approves."
           >
+            <Icon name="simple-icons:apple" class="h-5 w-5" aria-hidden="true" />
             TestFlight beta — coming soon
           </span>
         )
@@ -119,6 +123,7 @@ import {
             title="Android is in beta — email us to be added to the test track."
             class="inline-flex h-[54px] w-full items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 font-semibold text-white backdrop-blur transition hover:bg-white/20 sm:w-auto"
           >
+            <Icon name="simple-icons:android" class="h-5 w-5" aria-hidden="true" />
             Android beta — email to join
           </a>
         ) : (
@@ -126,6 +131,7 @@ import {
             class="inline-flex h-[54px] w-full cursor-default items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 font-semibold text-white/70 sm:w-auto"
             title="A public Android beta is coming soon."
           >
+            <Icon name="simple-icons:android" class="h-5 w-5" aria-hidden="true" />
             Android beta — coming soon
           </span>
         )
@@ -138,7 +144,7 @@ import {
         rel="noopener"
         class="inline-flex h-[54px] w-full items-center justify-center gap-2 rounded-xl bg-cream px-6 font-semibold text-navy-deep transition hover:bg-white sm:w-auto"
       >
-        <span aria-hidden="true">☕</span> Buy Me a Coffee
+        <Icon name="lucide:coffee" class="h-5 w-5" aria-hidden="true" /> Buy Me a Coffee
       </a>
     </div>
 

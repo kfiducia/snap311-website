@@ -1,17 +1,19 @@
 ---
+import { Icon } from "astro-icon/components";
+
 const steps = [
   {
-    emoji: "📸",
+    icon: "lucide:camera",
     title: "Snap a photo",
     body: "Camera opens. Location is pulled from your photo's GPS automatically.",
   },
   {
-    emoji: "🏷️",
+    icon: "lucide:tag",
     title: "Pick a category",
     body: "Recent and most common categories are at the top. Search for the rest.",
   },
   {
-    emoji: "📩",
+    icon: "lucide:send",
     title: "Submit",
     body: "Goes straight to DC's 311 system — or queues and sends itself if you're offline. Track its status and get notified when it's closed.",
   },
@@ -34,8 +36,11 @@ const steps = [
             <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-navy px-3 py-1 text-xs font-bold text-white">
               {i + 1}
             </span>
-            <div class="text-5xl" aria-hidden="true">
-              {step.emoji}
+            <div
+              class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-navy/10 text-navy"
+              aria-hidden="true"
+            >
+              <Icon name={step.icon} class="h-7 w-7" />
             </div>
             <h3 class="mt-4 text-xl font-semibold text-navy-deep">
               {step.title}

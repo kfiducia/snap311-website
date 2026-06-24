@@ -1,9 +1,11 @@
 ---
+import { Icon } from "astro-icon/components";
+
 // Framed as the difference vs. the official DC 311 app: same backend,
 // faster flow, fewer steps, built to not fall over, and extras it lacks.
 const groups = [
   {
-    emoji: "⚡",
+    icon: "lucide:zap",
     title: "Faster, with fewer taps",
     items: [
       "Camera-first — snap a photo and the location fills itself in; attach up to 5",
@@ -13,7 +15,7 @@ const groups = [
     ],
   },
   {
-    emoji: "🛡️",
+    icon: "lucide:shield-check",
     title: "Built so nothing gets lost",
     items: [
       "Drafts save and auto-send when you're back online or DC 311 recovers",
@@ -23,7 +25,7 @@ const groups = [
     ],
   },
   {
-    emoji: "🔎",
+    icon: "lucide:compass",
     title: "Goes further than the official app",
     items: [
       "See what's already reported nearby on a live map — and skip filing a duplicate",
@@ -33,7 +35,7 @@ const groups = [
     ],
   },
   {
-    emoji: "🙂",
+    icon: "lucide:heart-handshake",
     title: "On your side",
     items: [
       "No Snap311 account or servers — reports go straight to DC 311, your info stays on your device",
@@ -63,9 +65,12 @@ const groups = [
       {
         groups.map((group) => (
           <div>
-            <h3 class="flex items-center gap-2 text-xl font-bold text-navy-deep">
-              <span class="text-2xl" aria-hidden="true">
-                {group.emoji}
+            <h3 class="flex items-center gap-3 text-xl font-bold text-navy-deep">
+              <span
+                class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-navy/10 text-navy"
+                aria-hidden="true"
+              >
+                <Icon name={group.icon} class="h-5 w-5" />
               </span>
               {group.title}
             </h3>

@@ -25,10 +25,10 @@
 
     <div class="mt-10 grid gap-8 lg:grid-cols-5">
       <!-- Map -->
-      <div class="lg:col-span-3">
+      <div class="flex flex-col lg:col-span-3 lg:h-[560px]">
         <div
           id="rr-map"
-          class="h-[380px] w-full overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5 sm:h-[440px]"
+          class="h-[380px] w-full overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5 sm:h-[440px] lg:h-auto lg:min-h-0 lg:flex-1"
           role="img"
           aria-label="Map of open DC 311 service requests across the city"
         >
@@ -52,7 +52,7 @@
       </div>
 
       <!-- Live feed -->
-      <div class="lg:col-span-2">
+      <div class="flex flex-col lg:col-span-2 lg:h-[560px]">
         <div class="flex items-center gap-3">
           <span class="relative flex h-2.5 w-2.5" aria-hidden="true">
             <span
@@ -88,7 +88,7 @@
         </div>
         <ul
           data-rr-feed
-          class="mt-4 divide-y divide-black/5 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5"
+          class="mt-4 h-[380px] divide-y divide-black/5 overflow-y-auto rounded-2xl bg-white shadow-sm ring-1 ring-black/5 sm:h-[440px] lg:h-auto lg:min-h-0 lg:flex-1"
         >
           {
             Array.from({ length: 6 }).map(() => (
