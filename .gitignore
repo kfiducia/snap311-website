@@ -25,3 +25,4 @@ pnpm-debug.log*
 
 # exploration-map data is built + uploaded to R2, never committed
 /active.json
+/aging.json

@@ -1,6 +1,9 @@
 ---
-// Live preview of DC 311 activity — the same open-requests snapshot the app's
-// "Nearby reports" map uses (data.snap311.app/active.json, rebuilt hourly).
+// Live preview of DC 311 activity — the open-requests snapshot the app's
+// "Nearby reports" map uses. Two feeds, unioned by request id:
+//   active.json — last 90 days (open + recently-closed), rebuilt ~hourly
+//   aging.json  — every still-open request older than 90 days, rebuilt daily
+// active is required; aging is optional depth (if it 404s we just show active).
 // Fetched client-side and lazy-initialised on scroll so it never weighs down
 // the initial page load. Degrades gracefully (section hides) if the feed is
 // unreachable.
@@ -125,7 +128,8 @@
   import L from "leaflet";
   import "leaflet/dist/leaflet.css";
 
-  const DATA_URL = "https://data.snap311.app/active.json";
+  const ACTIVE_URL = "https://data.snap311.app/active.json";
+  const AGING_URL = "https://data.snap311.app/aging.json";
 
   // Compact wire format: pt = [id, lat, lng, code, catIdx, opened, resolved, due]
   // code: 0 = open, 1 = in-progress, 2 = closed (recently)
@@ -143,6 +147,10 @@
     generated: number;
     cats: string[];
     pts: Pt[];
+    // aging.json only: how many long-abandoned "open" requests were hidden,
+    // and the age threshold (days) used to hide them.
+    staleHidden?: number;
+    staleOlderThanDays?: number;
   }
 
   // Shared across renders so the feed can drive the map.
@@ -188,12 +196,57 @@
     return n.toLocaleString("en-US");
   }
 
+  async function fetchSnapshot(url: string): Promise<Snapshot> {
+    const res = await fetch(url, { mode: "cors" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return (await res.json()) as Snapshot;
+  }
+
+  // Union two snapshots by request id. Each file carries its OWN cats index, so
+  // category indices are remapped into one shared array as points are merged.
+  // `primary` wins on id collisions (active.json is fresher than aging.json at
+  // their ~10-day overlap seam), and its `generated` time drives the meta line.
+  function mergeSnapshots(primary: Snapshot, secondary: Snapshot): Snapshot {
+    const cats: string[] = [...primary.cats];
+    const catIndex = new Map(cats.map((c, i) => [c, i]));
+    const byId = new Map<string, Pt>();
+
+    const absorb = (snap: Snapshot) => {
+      for (const p of snap.pts) {
+        const name = snap.cats[p[4]] ?? "Service request";
+        let ci = catIndex.get(name);
+        if (ci === undefined) {
+          ci = cats.length;
+          cats.push(name);
+          catIndex.set(name, ci);
+        }
+        byId.set(p[0], [p[0], p[1], p[2], p[3], ci, p[5], p[6], p[7]]);
+      }
+    };
+    // Secondary first so primary overwrites it on shared ids.
+    absorb(secondary);
+    absorb(primary);
+
+    return {
+      generated: primary.generated,
+      cats,
+      pts: [...byId.values()],
+      // The "N abandoned requests hidden" note comes from the aging feed.
+      staleHidden: secondary.staleHidden,
+      staleOlderThanDays: secondary.staleOlderThanDays,
+    };
+  }
+
   async function init(section: HTMLElement) {
     let snap: Snapshot;
     try {
-      const res = await fetch(DATA_URL, { mode: "cors" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      snap = (await res.json()) as Snapshot;
+      // active is required; aging is optional depth — fetch in parallel and
+      // fall back to active alone if aging is missing/unreachable.
+      const [active, aging] = await Promise.all([
+        fetchSnapshot(ACTIVE_URL),
+        fetchSnapshot(AGING_URL).catch(() => null),
+      ]);
+      snap = aging ? mergeSnapshots(active, aging) : active;
     } catch {
       // Feed unreachable — collapse the section rather than show empty skeletons.
       section.hidden = true;
@@ -207,8 +260,8 @@
     }
 
     renderMap(pts);
-    renderFeed(section, pts, cats, snap.generated);
-    renderMeta(section, pts, snap.generated);
+    renderFeed(section, pts, cats, snap.generated, snap);
+    renderMeta(section, snap);
   }
 
   function renderMap(pts: Pt[]) {
@@ -262,6 +315,7 @@
     pts: Pt[],
     cats: string[],
     generated: number,
+    snap: Snapshot,
   ) {
     const ul = section.querySelector<HTMLElement>("[data-rr-feed]");
     if (!ul) return;
@@ -269,12 +323,8 @@
     // Open only — drop recently-closed (code 2).
     const open = pts.filter((p) => p[3] !== 2 && p[5] != null);
     const lists: Record<string, Pt[]> = {
-      recent: [...open]
-        .sort((a, b) => (b[5] as number) - (a[5] as number))
-        .slice(0, 12),
-      oldest: [...open]
-        .sort((a, b) => (a[5] as number) - (b[5] as number))
-        .slice(0, 12),
+      recent: [...open].sort((a, b) => (b[5] as number) - (a[5] as number)),
+      oldest: [...open].sort((a, b) => (a[5] as number) - (b[5] as number)),
     };
 
     const dot: Record<number, string> = { 0: "#034670", 1: "#d97706" };
@@ -295,11 +345,68 @@
       </li>`;
     };
 
+    // Headline the "Oldest open" list with what we deliberately cut off, so it
+    // reads as "oldest we still trust" rather than "oldest that exists".
+    const staleNotice = () => {
+      if (!snap.staleHidden || !snap.staleOlderThanDays) return "";
+      const yrs = Math.round(snap.staleOlderThanDays / 365);
+      return `<li class="flex items-start gap-2 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-800">
+        <span aria-hidden="true">⚠</span>
+        <span><strong>${fmtCount(snap.staleHidden)} older requests hidden.</strong> Anything still marked open after ${yrs}+ years is almost certainly abandoned, not active — so the list below starts at the oldest we still consider live.</span>
+      </li>`;
+    };
+
+    // Infinite scroll: render in batches and append more as the list nears the
+    // bottom, so all ~24k open requests are browsable without building 24k rows
+    // up front.
+    const BATCH = 30;
+    const CAP = 1500; // bound DOM growth; the rest live in the app
+    let currentKey = "recent";
+    let shown = 0;
+
+    const tailRow = (remaining: number) =>
+      `<li class="px-4 py-4 text-center text-xs text-muted">
+        <a href="#get-the-app" class="font-semibold text-brand underline underline-offset-2 hover:text-navy">
+          +${fmtCount(remaining)} more — see them all in the app →
+        </a>
+      </li>`;
+
+    const appendBatch = () => {
+      const list = lists[currentKey] ?? lists.recent;
+      const limit = Math.min(list.length, CAP);
+      if (shown >= limit) return;
+      const next = list.slice(shown, shown + BATCH);
+      ul.insertAdjacentHTML("beforeend", next.map(row).join(""));
+      shown += next.length;
+      // At the cap (with more left), close the list with a link to the app.
+      if (shown >= limit && list.length > shown)
+        ul.insertAdjacentHTML("beforeend", tailRow(list.length - shown));
+    };
+
     const render = (key: string) => {
-      ul.innerHTML = (lists[key] ?? lists.recent).map(row).join("");
+      currentKey = key;
+      shown = 0;
       activeRow = null;
+      ul.scrollTop = 0;
+      ul.innerHTML = key === "oldest" ? staleNotice() : "";
+      appendBatch();
+      // Keep filling until the container scrolls, so short viewports can still
+      // trigger the scroll handler that loads the rest.
+      let guard = 0;
+      while (
+        ul.scrollHeight <= ul.clientHeight + 100 &&
+        shown < (lists[currentKey] ?? lists.recent).length &&
+        guard++ < 100
+      ) {
+        appendBatch();
+      }
     };
     render("recent");
+
+    // Load more as the user approaches the bottom.
+    ul.addEventListener("scroll", () => {
+      if (ul.scrollTop + ul.clientHeight >= ul.scrollHeight - 200) appendBatch();
+    });
 
     // Tab switching (Recently reported / Oldest open).
     const tabs = Array.from(
@@ -352,16 +459,23 @@
     }
   }
 
-  function renderMeta(section: HTMLElement, pts: Pt[], generated: number) {
-    const open = pts.reduce((n, p) => (p[3] !== 2 ? n + 1 : n), 0);
+  function renderMeta(section: HTMLElement, snap: Snapshot) {
+    const open = snap.pts.reduce((n, p) => (p[3] !== 2 ? n + 1 : n), 0);
 
     const countEl = section.querySelector<HTMLElement>("[data-rr-count]");
     if (countEl)
       countEl.textContent = `${fmtCount(open)} open requests across DC`;
 
     const updEl = section.querySelector<HTMLElement>("[data-rr-updated]");
-    if (updEl)
-      updEl.textContent = `Live from DC 311 · updated ${ago(generated, Date.now())} · refreshes hourly`;
+    if (updEl) {
+      let txt = `Live from DC 311 · updated ${ago(snap.generated, Date.now())} · refreshes hourly`;
+      // Note the long-abandoned requests we hide so the count reads honestly.
+      if (snap.staleHidden && snap.staleOlderThanDays) {
+        const yrs = Math.round(snap.staleOlderThanDays / 365);
+        txt += ` · ${fmtCount(snap.staleHidden)} inactive (${yrs}+ yrs) hidden`;
+      }
+      updEl.textContent = txt;
+    }
   }
 
   function escapeHtml(s: string): string {
