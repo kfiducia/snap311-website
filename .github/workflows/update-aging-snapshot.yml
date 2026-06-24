@@ -1,0 +1,54 @@
+name: Update exploration-map aging snapshot
+
+# Rebuilds aging.json — every STILL-OPEN 311 request older than ~90 days, swept
+# from DC's per-year ArcGIS layers (2009..current) — and uploads it to R2.
+#
+# This is the "deep history" companion to active.json. active.json (its own
+# 20-min workflow) covers DC's "Last 90 Days" layer; aging.json adds everything
+# older that is still open. Clients fetch BOTH and union them by
+# SERVICEREQUESTID. The two overlap by ~10 days at the seam by design, so the
+# union never has a gap; dedupe keeps active's (fresher) copy.
+#
+# Why a separate, slower job: the historical backlog is large (~20k points,
+# ~0.4 MB gz) but slow to change, so re-sweeping ~18 year-layers every 20 min
+# would hammer DC's API for almost no new information. Once a day is plenty.
+#
+# Same R2 setup/secrets as update-active-snapshot.yml. aging.json is never
+# committed to git.
+
+on:
+  schedule:
+    # Once a day, off-peak (09:17 UTC ≈ 04:17–05:17 ET). The data lags days, so
+    # the exact time doesn't matter; we just want it to land reliably daily.
+    - cron: '17 9 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: aging-snapshot
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Build aging.json from live ArcGIS per-year layers
+        run: |
+          python scripts/build_active.py --aging --out aging.json
+          ls -la aging.json
+
+      - name: Upload to R2 (S3 API)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_S3_ENDPOINT: ${{ secrets.R2_S3_ENDPOINT }}
+        run: |
+          aws s3 cp aging.json s3://snap311-data/aging.json \
+            --endpoint-url "$R2_S3_ENDPOINT" \
+            --content-type application/json \
+            --cache-control "max-age=21600"
