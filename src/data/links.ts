@@ -29,4 +29,6 @@ export const BMC_URL = "https://buymeacoffee.com/snap311";
 export const GITHUB_REPO = "https://github.com/kfiducia/snap311";
 export const GITHUB_ISSUES = "https://github.com/kfiducia/snap311/issues";
 
-export const PRIVACY_URL = "https://kfiducia.github.io/snap311-policy/";
+// Privacy policy is hosted on-site at /privacy (migrated from the
+// snap311-policy GitHub Pages site). The repo still exists for issue reports.
+export const PRIVACY_URL = "/privacy";

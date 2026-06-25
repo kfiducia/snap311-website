@@ -1,0 +1,265 @@
+---
+import Layout from "../layouts/Layout.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+---
+
+<Layout
+  title="Privacy Policy — Snap311"
+  description="What Snap311 collects, what it doesn't, and the third parties involved when you file a DC 311 report."
+>
+  <!-- Header band -->
+  <header class="bg-cream">
+    <div class="mx-auto max-w-3xl px-6 py-14 sm:py-20">
+      <a
+        href="/"
+        class="inline-flex items-center gap-1 text-sm font-semibold text-brand underline underline-offset-2 hover:text-navy"
+      >
+        <span aria-hidden="true">←</span> Back to Snap311
+      </a>
+
+      <h1
+        class="mt-6 text-4xl font-bold tracking-tight text-navy-deep sm:text-5xl"
+      >
+        Privacy Policy
+      </h1>
+      <p class="mt-4 text-sm font-medium text-muted">
+        Last updated: June 16, 2026
+      </p>
+    </div>
+  </header>
+
+  <main class="bg-white">
+    <div
+      class="mx-auto max-w-3xl space-y-10 px-6 py-14 text-base leading-relaxed text-ink sm:py-20"
+    >
+      <p>
+        Snap311 ("the app") is an independent, unofficial mobile client for
+        filing service requests with the District of Columbia 311 system. The
+        app is not affiliated with or endorsed by the DC Office of Unified
+        Communications or any DC government agency.
+      </p>
+
+      <section class="space-y-4">
+        <h2 class="text-2xl font-bold tracking-tight text-navy-deep">
+          What we collect
+        </h2>
+        <p>
+          Snap311 collects only what's needed to file a service request and to
+          make the app work reliably:
+        </p>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-3">
+            <span
+              class="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand"
+              aria-hidden="true"></span>
+            <span>
+              <strong>Contact info you enter</strong> (first/last name, email or
+              phone). Stored locally on your device using iOS encrypted storage.
+              Sent to DC's official 311 API at <code
+                class="rounded bg-black/5 px-1 py-0.5 font-mono text-sm text-ink/80"
+                >dc311-api.herokuapp.com</code
+              > only when you submit a report.
+            </span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span
+              class="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand"
+              aria-hidden="true"></span>
+            <span>
+              <strong>Address and location data</strong> for the report you're
+              filing. Extracted from the GPS in your chosen photo's EXIF
+              metadata, or typed by you, or picked on a map. Sent to DC's 311 API
+              as part of the report.
+            </span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span
+              class="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand"
+              aria-hidden="true"></span>
+            <span>
+              <strong>Photos you choose to attach.</strong> Uploaded to DC's
+              official 311 worker at <code
+                class="rounded bg-black/5 px-1 py-0.5 font-mono text-sm text-ink/80"
+                >dc311-api-worker.herokuapp.com</code
+              >, which stores them in DC's Salesforce system as part of the
+              service request.
+            </span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span
+              class="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand"
+              aria-hidden="true"></span>
+            <span>
+              <strong>Diagnostic / crash reports</strong> (optional, can be
+              disabled). Sentry SDK events about errors and slow API calls,
+              scrubbed of API keys and personal data. Used only to fix bugs. You
+              can disable this in <strong>Settings → Send diagnostics</strong>.
+            </span>
+          </li>
+        </ul>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-2xl font-bold tracking-tight text-navy-deep">
+          What we do NOT collect
+        </h2>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-3">
+            <span
+              class="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-muted"
+              aria-hidden="true"></span>
+            <span>We do not track your location in the background.</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span
+              class="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-muted"
+              aria-hidden="true"></span>
+            <span>We do not sell, share, or monetize any of your data.</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span
+              class="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-muted"
+              aria-hidden="true"></span>
+            <span>
+              We do not use advertising SDKs or third-party trackers (no Google
+              Analytics, Meta SDK, etc.).
+            </span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span
+              class="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-muted"
+              aria-hidden="true"></span>
+            <span>
+              We do not require an account with us. There is no Snap311 account;
+              your contact info stays on your device and is only attached to the
+              reports you submit to DC.
+            </span>
+          </li>
+        </ul>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-2xl font-bold tracking-tight text-navy-deep">
+          Third parties
+        </h2>
+        <p>When you submit a report, the data you've entered is sent to:</p>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-3">
+            <span
+              class="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand"
+              aria-hidden="true"></span>
+            <span>
+              <strong>DC's official 311 API</strong> (<code
+                class="rounded bg-black/5 px-1 py-0.5 font-mono text-sm text-ink/80"
+                >dc311-api.herokuapp.com</code
+              >) — the same backend the official DC 311 app and 311.dc.gov web
+              portal use. Their handling of your data is governed by DC
+              government policy.
+            </span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span
+              class="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand"
+              aria-hidden="true"></span>
+            <span>
+              <strong>DC's official 311 worker</strong> (<code
+                class="rounded bg-black/5 px-1 py-0.5 font-mono text-sm text-ink/80"
+                >dc311-api-worker.herokuapp.com</code
+              >) — for photo attachments, stored in DC's Salesforce.
+            </span>
+          </li>
+        </ul>
+        <p>If you opt in (or leave on by default) to diagnostics:</p>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-3">
+            <span
+              class="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand"
+              aria-hidden="true"></span>
+            <span>
+              <strong>Sentry</strong> (sentry.io) — receives error reports with
+              breadcrumbs of what you did right before the error. API keys are
+              scrubbed before send. Personal info (name, email, contact info) is
+              never sent. You can disable any time.
+            </span>
+          </li>
+        </ul>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-2xl font-bold tracking-tight text-navy-deep">
+          Your choices
+        </h2>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-3">
+            <span
+              class="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand"
+              aria-hidden="true"></span>
+            <span>
+              <strong>Disable diagnostics</strong>: Settings → Send diagnostics →
+              off.
+            </span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span
+              class="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand"
+              aria-hidden="true"></span>
+            <span>
+              <strong>Remove your saved info</strong>: Delete the app. Local
+              storage is erased with the app on iOS.
+            </span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span
+              class="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand"
+              aria-hidden="true"></span>
+            <span>
+              <strong>Remove a submitted report</strong>: Snap311 can't do this —
+              submissions live in DC's Salesforce system after you file. Contact
+              DC 311 directly to request a record correction.
+            </span>
+          </li>
+        </ul>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-2xl font-bold tracking-tight text-navy-deep">
+          Children
+        </h2>
+        <p>
+          Snap311 is not directed at children under 13 and does not knowingly
+          collect personal information from children.
+        </p>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-2xl font-bold tracking-tight text-navy-deep">
+          Changes
+        </h2>
+        <p>
+          If this policy changes materially, the new version will be posted at <a
+            href="https://snap311.app/privacy"
+            class="text-brand underline underline-offset-2 hover:text-navy"
+            >snap311.app/privacy</a
+          > with an updated date. Continued use after a change indicates
+          acceptance.
+        </p>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-2xl font-bold tracking-tight text-navy-deep">
+          Contact
+        </h2>
+        <p>
+          Open an issue: <a
+            href="https://github.com/kfiducia/snap311-policy/issues"
+            target="_blank"
+            rel="noopener"
+            class="text-brand underline underline-offset-2 hover:text-navy"
+            >github.com/kfiducia/snap311-policy/issues</a
+          >.
+        </p>
+      </section>
+    </div>
+  </main>
+  <SiteFooter />
+</Layout>
